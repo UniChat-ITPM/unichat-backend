@@ -1,0 +1,27 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@unichat-backend/common": ["common/src/index.ts"],
+      "@unichat-backend/contracts": ["contracts/src/index.ts"],
+      "@unichat-backend/config": ["config/src/index.ts"],
+      "@unichat-backend/database": ["database/src/index.ts"],
+      "@unichat-backend/logger": ["logger/src/index.ts"],
+      "@unichat-backend/messaging-broker": ["messaging-broker/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

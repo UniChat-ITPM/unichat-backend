@@ -1,0 +1,19 @@
+{
+  "name": "messaging-broker",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "messaging-broker/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/messaging-broker",
+        "main": "messaging-broker/src/index.ts",
+        "tsConfig": "messaging-broker/tsconfig.lib.json",
+        "assets": ["messaging-broker/*.md"]
+      }
+    }
+  },
+  "tags": []
+}
