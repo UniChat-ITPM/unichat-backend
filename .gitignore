@@ -43,5 +43,7 @@ Thumbs.db
 .nx/workspace-data
 .claude/worktrees
 .claude/settings.local.json
+.wwebjs_auth
+.wwebjs_cache
 
 /generated/prisma
