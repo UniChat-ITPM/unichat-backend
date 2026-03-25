@@ -1,15 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { OtpStatus } from '@prisma/client';
-import { createHash, randomInt } from 'crypto';
+import axios from 'axios';
 import { NotificationLogRepository } from './repositories/notification-log.repository';
 import { WhatsappProviderService } from './providers/whatsapp-provider.service';
-import { NotificationChannel } from './types/notification.types';
 
 @Injectable()
 export class OtpService implements OnModuleInit {
-  private static readonly OTP_LENGTH = 6;
-  private static readonly OTP_EXPIRES_MS = 5 * 60_000;
-  private static readonly MAX_VERIFY_ATTEMPTS = 5;
+  private readonly authServiceBaseUrl =
+    process.env['AUTH_SERVICE_URL'] ?? 'http://localhost:4226/api';
 
   constructor(
     private readonly logs: NotificationLogRepository,
@@ -23,42 +20,64 @@ export class OtpService implements OnModuleInit {
   async requestOtp(phoneNumber: string) {
     const normalizedPhone = this.normalizeAndValidatePhone(phoneNumber);
 
-    const isRegisteredWhatsappUser =
-      await this.whatsappProvider.isWhatsappUser(normalizedPhone);
-    if (!isRegisteredWhatsappUser) {
+    // 1) Ensure number exists on WhatsApp before requesting an OTP.
+    const isWhatsappUser = await this.whatsappProvider.isWhatsappUser(
+      normalizedPhone,
+    );
+    if (!isWhatsappUser) {
       return {
         success: false,
         message: 'Provided mobile number is not available on WhatsApp',
       };
     }
 
-    const otpCode = this.generateOtp();
-    const otpHash = this.hashOtp(otpCode);
+    // 2) Ask auth-service to generate and store OTP hash in DB.
+    const generateResp = await axios.post(
+      `${this.authServiceBaseUrl}/auth/otp/generate`,
+      { phoneNumber: normalizedPhone, purpose: 'LOGIN' },
+    );
 
-    const otpRecord = await this.logs.createOtpRequest({
-      phoneNumber: normalizedPhone,
-      otpHash,
-      expiresAt: new Date(Date.now() + OtpService.OTP_EXPIRES_MS),
-      maxAttempts: OtpService.MAX_VERIFY_ATTEMPTS,
-      channel: NotificationChannel.WHATSAPP,
-      purpose: 'LOGIN',
-    });
+    if (!generateResp.data?.success) {
+      return {
+        success: false,
+        message: generateResp.data?.message ?? 'Failed to generate OTP',
+      };
+    }
+
+    const { otpCode, requestId, expiresAt } = generateResp.data as {
+      otpCode: string;
+      requestId: string;
+      expiresAt: Date;
+    };
 
     const messageBody = `Your UniChat OTP is ${otpCode}. It will expire in 5 minutes.`;
 
-    try {
-      const providerMessageId = await this.whatsappProvider.sendMessage(
-        normalizedPhone,
-        messageBody,
-      );
-      await this.logs.markSent(otpRecord.id, providerMessageId);
-    } catch (error) {
-      const reason =
-        error instanceof Error ? error.message : 'Failed to send OTP on WhatsApp';
-      await this.logs.markFailed(otpRecord.id, reason);
+    // 3) Delivery to user (retry WhatsApp send failures).
+    const maxSendRetries = Number(process.env['OTP_SEND_RETRIES'] ?? 3);
+    let lastError: string | undefined;
+    for (let attempt = 1; attempt <= maxSendRetries; attempt += 1) {
+      try {
+        const providerMessageId = await this.whatsappProvider.sendMessage(
+          normalizedPhone,
+          messageBody,
+        );
+        await this.logs.markSent(requestId, providerMessageId);
+        lastError = undefined;
+        break;
+      } catch (error) {
+        lastError =
+          error instanceof Error ? error.message : 'Failed to send OTP on WhatsApp';
+        if (attempt < maxSendRetries) {
+          await new Promise((r) => setTimeout(r, 800 * attempt));
+        }
+      }
+    }
+
+    if (lastError) {
+      await this.logs.markFailed(requestId, lastError);
       return {
         success: false,
-        message: 'OTP generation succeeded but WhatsApp delivery failed',
+        message: 'OTP generated but WhatsApp delivery failed',
       };
     }
 
@@ -66,39 +85,18 @@ export class OtpService implements OnModuleInit {
       success: true,
       message: 'OTP sent successfully',
       otpCode,
-      requestId: otpRecord.id,
-      expiresAt: otpRecord.expiresAt,
+      requestId,
+      expiresAt,
     };
   }
 
   async verifyOtp(phoneNumber: string, otpCode: string) {
-    const normalizedPhone = this.normalizeAndValidatePhone(phoneNumber);
-    this.validateOtpFormat(otpCode);
-
-    const latestOtp = await this.logs.findLatestPendingOtp(normalizedPhone, 'LOGIN');
-    if (!latestOtp) {
-      return { success: false, message: 'No active OTP found. Please request a new OTP.' };
-    }
-
-    if (latestOtp.expiresAt.getTime() < Date.now()) {
-      await this.logs.markFailed(latestOtp.id, 'OTP expired');
-      return { success: false, message: 'OTP expired. Please request a new OTP.' };
-    }
-
-    const incomingHash = this.hashOtp(otpCode);
-    if (incomingHash !== latestOtp.otpCodeHash) {
-      const attempts = latestOtp.attempts + 1;
-      await this.logs.incrementAttempts(latestOtp.id, 'Invalid OTP');
-
-      if (attempts >= latestOtp.maxAttempts) {
-        await this.logs.markFailed(latestOtp.id, 'Maximum verification attempts exceeded');
-      }
-
-      return { success: false, message: 'Invalid OTP' };
-    }
-
-    await this.logs.markVerified(latestOtp.id);
-    return { success: true, message: 'Login success' };
+    // Verification authority is auth-service.
+    const resp = await axios.post(
+      `${this.authServiceBaseUrl}/auth/otp/verify`,
+      { phoneNumber, otpCode },
+    );
+    return resp.data;
   }
 
   private normalizeAndValidatePhone(phoneNumber: string): string {
@@ -108,22 +106,5 @@ export class OtpService implements OnModuleInit {
       throw new Error('Phone number must be in E.164 format, e.g. +94771234567');
     }
     return normalized;
-  }
-
-  private validateOtpFormat(otpCode: string) {
-    if (!new RegExp(`^\\d{${OtpService.OTP_LENGTH}}$`).test(otpCode)) {
-      throw new Error('OTP must be a 6 digit number');
-    }
-  }
-
-  private generateOtp(): string {
-    const upper = 10 ** OtpService.OTP_LENGTH;
-    const value = randomInt(0, upper);
-    return value.toString().padStart(OtpService.OTP_LENGTH, '0');
-  }
-
-  private hashOtp(otpCode: string): string {
-    const pepper = process.env['OTP_HASH_PEPPER'] ?? '';
-    return createHash('sha256').update(`${otpCode}:${pepper}`).digest('hex');
   }
 }
