@@ -43,6 +43,24 @@ export class ConversationService {
     }
   }
 
+  private async assertUserExists(userId: string): Promise<void> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) {
+      throw new NotFoundException(`User not found: "${userId}"`);
+    }
+  }
+
+  private async assertUsersExist(userIds: string[]): Promise<void> {
+    const users = await this.repo.findUsersByIds(userIds);
+    const foundIds = new Set(users.map((u) => u.id));
+    const missing = userIds.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw new NotFoundException(
+        `User(s) not found: ${missing.map((id) => `"${id}"`).join(', ')}`,
+      );
+    }
+  }
+
   // ─── Create Private (Direct) Conversation ──────────────────────────
 
   async createPrivateConversation(
@@ -57,6 +75,9 @@ export class ConversationService {
     if (participantUserId === userId) {
       throw new BadRequestException('Cannot create a conversation with yourself');
     }
+
+    // Verify both users exist in the database
+    await this.assertUsersExist([userId, participantUserId]);
 
     // Prevent duplicate direct conversations
     const existing = await this.repo.findExistingDirectConversation(
@@ -114,6 +135,10 @@ export class ConversationService {
     if (participantUserIds && participantUserIds.length > 0) {
       this.validateUUIDs(participantUserIds);
     }
+
+    // Verify all users (creator + participants) exist in the database
+    const allUserIds = [userId, ...(participantUserIds ?? []).filter((id) => id !== userId)];
+    await this.assertUsersExist(allUserIds);
 
     const conversation = await this.repo.createConversation({
       type: ConversationType.GROUP,
@@ -194,6 +219,9 @@ export class ConversationService {
 
     // Validate all user IDs
     this.validateUUIDs(userIds);
+
+    // Verify all users exist in the database
+    await this.assertUsersExist(userIds);
 
     // Filter out users who are already active participants
     const existing = await this.repo.findActiveParticipantsByConversation(conversationId);

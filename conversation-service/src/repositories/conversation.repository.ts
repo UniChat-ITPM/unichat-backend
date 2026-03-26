@@ -25,6 +25,16 @@ export class ConversationRepository implements OnModuleDestroy {
     this.prisma = new PrismaClient({ adapter });
   }
 
+  // ─── User Lookup ───────────────────────────────────────────────────
+
+  async findUserById(userId: string) {
+    return this.prisma.user.findUnique({ where: { id: userId } });
+  }
+
+  async findUsersByIds(userIds: string[]) {
+    return this.prisma.user.findMany({ where: { id: { in: userIds } } });
+  }
+
   // ─── Conversation CRUD ──────────────────────────────────────────────
 
   async createConversation(data: {
