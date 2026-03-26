@@ -1,5 +1,64 @@
 # UnichatBackend
 
+## OTP Architecture (Current)
+
+The OTP flow is split across services:
+
+- `api-gateway` (public entry point)
+- `otp-service` (WhatsApp availability check + async delivery enqueue)
+- `auth-service` (OTP generation/hash storage + OTP verification)
+- `user-service` (find/create user after OTP verification)
+- RabbitMQ (async delivery queue between request path and WhatsApp send worker)
+
+### End-to-end flow
+
+1. Client calls `POST /api/auth/otp/request` on API Gateway.
+2. Gateway forwards to `otp-service`.
+3. `otp-service` validates number + checks WhatsApp availability.
+4. `otp-service` asks `auth-service` to generate OTP and store hash in DB.
+5. `otp-service` publishes delivery job to RabbitMQ queue `otp.send`.
+6. `otp-service` consumer reads queue and sends WhatsApp OTP.
+7. Client calls `POST /api/auth/otp/verify` on API Gateway.
+8. Gateway forwards verify to `auth-service`.
+9. `auth-service` verifies OTP and then:
+   - if user exists in `user-service`: return existing display name
+   - if not: call `user-service` create endpoint and return new user
+
+## RabbitMQ Setup (Windows)
+
+### Start RabbitMQ with Docker
+
+```sh
+docker run -d --name unichat-rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+```
+
+### RabbitMQ Management UI
+
+- URL: <http://localhost:15672>
+- Username: `guest`
+- Password: `guest`
+
+### Useful RabbitMQ commands
+
+```sh
+docker start unichat-rabbitmq
+docker stop unichat-rabbitmq
+docker logs -f unichat-rabbitmq
+```
+
+## Required Environment Variables
+
+Set these before starting services:
+
+- `DATABASE_URL` (required by auth/user/otp services using Prisma)
+- `OTP_HASH_PEPPER` (recommended for OTP hash hardening)
+- `RABBITMQ_URL` (default: `amqp://localhost:5672`)
+- `OTP_SEND_QUEUE` (default: `otp.send`)
+- `OTP_SEND_RETRIES` (default: `3`)
+- `AUTH_SERVICE_URL` (default: `http://localhost:4226/api`)
+- `USER_SERVICE_URL` (default: `http://localhost:4227/api`)
+- `OTP_SERVICE_URL` (gateway default: `http://localhost:4228/api`)
+
 ## Service Startup (Windows)
 
 Use these npm scripts to start each service on a dedicated port. The scripts set `PORT` per service, and your `main.ts` defaults remain unchanged.
@@ -13,10 +72,10 @@ npm install
 ### Start services one by one
 
 ```sh
-npm run up:api-gateway
 npm run up:auth-service
 npm run up:user-service
 npm run up:otp-service
+npm run up:api-gateway
 npm run up:conversation-service
 npm run up:messaging-service
 npm run up:media-service
@@ -31,6 +90,14 @@ npm run up:realtime-service
 npm run up:all
 ```
 
+Recommended startup order for OTP flow:
+
+1. RabbitMQ
+2. `auth-service`
+3. `user-service`
+4. `otp-service`
+5. `api-gateway`
+
 ### Service port map
 
 - api-gateway: 4225
@@ -43,6 +110,37 @@ npm run up:all
 - moderation-service: 8226
 - conversion-service: 8227
 - realtime-service: 8228
+
+## OTP Endpoints (Postman)
+
+Base URL (public): `http://localhost:4225/api`
+
+### Request OTP
+
+`POST /auth/otp/request`
+
+```json
+{
+  "phoneNumber": "+94771234567"
+}
+```
+
+### Verify OTP
+
+`POST /auth/otp/verify`
+
+```json
+{
+  "phoneNumber": "+94771234567",
+  "otpCode": "123456"
+}
+```
+
+Notes:
+
+- For local testing, current request response includes `otpCode`.
+- In production, do not return OTP to clients.
+- `api-gateway` calling `http://localhost:4228` will fail with `ECONNREFUSED` if `otp-service` is not running.
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
