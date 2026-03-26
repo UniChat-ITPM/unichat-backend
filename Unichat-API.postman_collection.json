@@ -492,16 +492,234 @@
       "name": "📱 Messaging Service (4230)",
       "item": [
         {
-          "name": "Messaging - Empty (to be implemented)",
+          "name": "Send Text Message",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"text\": \"Hello, this is a test message\",\n  \"replyToMessageId\": null\n}"
+            },
             "url": {
-              "raw": "http://localhost:4230/api/messaging",
+              "raw": "http://localhost:4230/api/messages/text",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4230",
-              "path": ["api", "messaging"]
+              "path": ["api", "messages", "text"]
+            }
+          }
+        },
+        {
+          "name": "Send Media Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"mediaAssetIds\": [\"550e8400-e29b-41d4-a716-446655440200\"],\n  \"caption\": \"Check out this image\",\n  \"replyToMessageId\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/media",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "media"]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/conversation/550e8400-e29b-41d4-a716-446655440100?limit=50&cursor=",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "conversation", "550e8400-e29b-41d4-a716-446655440100"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "cursor",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/unread-counts/550e8400-e29b-41d4-a716-446655440100",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "unread-counts", "550e8400-e29b-41d4-a716-446655440100"]
+            }
+          }
+        },
+        {
+          "name": "Get Message By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
+            }
+          }
+        },
+        {
+          "name": "Forward Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetConversationId\": \"550e8400-e29b-41d4-a716-446655440101\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/forward",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "forward"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Delivered",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/delivered",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "delivered"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/read",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "read"]
+            }
+          }
+        },
+        {
+          "name": "Edit Message",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newText\": \"Updated message text\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/edit",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "edit"]
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
             }
           }
         }
