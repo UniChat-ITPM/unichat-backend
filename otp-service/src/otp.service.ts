@@ -1,12 +1,26 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import axios from 'axios';
+import amqplib, { Channel, Connection, ConsumeMessage } from 'amqplib';
 import { NotificationLogRepository } from './repositories/notification-log.repository';
 import { WhatsappProviderService } from './providers/whatsapp-provider.service';
 
 @Injectable()
-export class OtpService implements OnModuleInit {
+export class OtpService implements OnModuleInit, OnModuleDestroy {
   private readonly authServiceBaseUrl =
     process.env['AUTH_SERVICE_URL'] ?? 'http://localhost:4226/api';
+
+  private readonly rabbitMqUrl =
+    process.env['RABBITMQ_URL'] ?? 'amqp://localhost:5672';
+
+  private readonly otpSendQueue =
+    process.env['OTP_SEND_QUEUE'] ?? 'otp.send';
+
+  private readonly maxSendRetries = Number(process.env['OTP_SEND_RETRIES'] ?? 3);
+
+  private rabbitConnection: Connection | null = null;
+  private rabbitChannel: Channel | null = null;
+
+  private readonly scheduledRetryTimers = new Set<NodeJS.Timeout>();
 
   constructor(
     private readonly logs: NotificationLogRepository,
@@ -15,6 +29,29 @@ export class OtpService implements OnModuleInit {
 
   async onModuleInit() {
     await this.whatsappProvider.initialize();
+    await this.initRabbitMq();
+    await this.startOtpSendConsumer();
+  }
+
+  async onModuleDestroy() {
+    for (const timer of this.scheduledRetryTimers) {
+      clearTimeout(timer);
+    }
+    this.scheduledRetryTimers.clear();
+
+    try {
+      await this.rabbitChannel?.close();
+    } catch {
+      // ignore close errors on shutdown
+    }
+    try {
+      await this.rabbitConnection?.close();
+    } catch {
+      // ignore close errors on shutdown
+    }
+
+    // Keep whatsapp shutdown lightweight; the provider currently supports destroy().
+    await this.whatsappProvider.shutdown();
   }
 
   async requestOtp(phoneNumber: string) {
@@ -52,38 +89,20 @@ export class OtpService implements OnModuleInit {
 
     const messageBody = `Your UniChat OTP is ${otpCode}. It will expire in 5 minutes.`;
 
-    // 3) Delivery to user (retry WhatsApp send failures).
-    const maxSendRetries = Number(process.env['OTP_SEND_RETRIES'] ?? 3);
-    let lastError: string | undefined;
-    for (let attempt = 1; attempt <= maxSendRetries; attempt += 1) {
-      try {
-        const providerMessageId = await this.whatsappProvider.sendMessage(
-          normalizedPhone,
-          messageBody,
-        );
-        await this.logs.markSent(requestId, providerMessageId);
-        lastError = undefined;
-        break;
-      } catch (error) {
-        lastError =
-          error instanceof Error ? error.message : 'Failed to send OTP on WhatsApp';
-        if (attempt < maxSendRetries) {
-          await new Promise((r) => setTimeout(r, 800 * attempt));
-        }
-      }
-    }
-
-    if (lastError) {
-      await this.logs.markFailed(requestId, lastError);
-      return {
-        success: false,
-        message: 'OTP generated but WhatsApp delivery failed',
-      };
-    }
+    // 3) Enqueue OTP delivery to be processed by RabbitMQ consumer.
+    //    This makes `/otp/request` fast (no WhatsApp send wait).
+    await this.enqueueOtpSendJob({
+      requestId,
+      phoneNumber: normalizedPhone,
+      otpCode,
+      messageBody,
+      purpose: 'LOGIN',
+      retryCount: 0,
+    });
 
     return {
       success: true,
-      message: 'OTP sent successfully',
+      message: 'OTP queued for WhatsApp delivery',
       otpCode,
       requestId,
       expiresAt,
@@ -97,6 +116,120 @@ export class OtpService implements OnModuleInit {
       { phoneNumber, otpCode },
     );
     return resp.data;
+  }
+
+  private async initRabbitMq() {
+    this.rabbitConnection = await amqplib.connect(this.rabbitMqUrl);
+    this.rabbitChannel = await this.rabbitConnection.createChannel();
+
+    await this.rabbitChannel.assertQueue(this.otpSendQueue, {
+      durable: true,
+    });
+
+    // Process one job at a time per service instance.
+    await this.rabbitChannel.prefetch(1);
+  }
+
+  private async startOtpSendConsumer() {
+    if (!this.rabbitChannel) return;
+
+    await this.rabbitChannel.consume(
+      this.otpSendQueue,
+      (msg) => void this.handleOtpSendMessage(msg),
+      { noAck: false },
+    );
+  }
+
+  private async handleOtpSendMessage(msg: ConsumeMessage | null) {
+    if (!msg) return;
+    if (!this.rabbitChannel) return;
+
+    const retryFromHeader = Number(
+      msg.properties?.headers?.['x-retry-count'] ?? 0,
+    );
+
+    const payload = JSON.parse(msg.content.toString()) as {
+      requestId: string;
+      phoneNumber: string;
+      otpCode: string;
+      messageBody: string;
+      purpose: string;
+      retryCount?: number;
+    };
+
+    const retryCount = Number.isFinite(payload.retryCount)
+      ? payload.retryCount
+      : retryFromHeader;
+
+    try {
+      const providerMessageId = await this.whatsappProvider.sendMessage(
+        payload.phoneNumber,
+        payload.messageBody,
+      );
+
+      await this.logs.markSent(payload.requestId, providerMessageId);
+      this.rabbitChannel.ack(msg);
+    } catch (error) {
+      const reason =
+        error instanceof Error ? error.message : 'Failed to send OTP on WhatsApp';
+
+      const nextRetry = retryCount + 1;
+
+      if (retryCount < this.maxSendRetries) {
+        const backoffMs = Math.min(60_000, 800 * 2 ** retryCount);
+
+        const timer = setTimeout(() => {
+          void this.rabbitChannel
+            ?.sendToQueue(
+              this.otpSendQueue,
+              Buffer.from(
+                JSON.stringify({
+                  ...payload,
+                  retryCount: nextRetry,
+                }),
+              ),
+              {
+                persistent: true,
+                headers: { 'x-retry-count': nextRetry },
+              },
+            )
+            .catch(() => {
+              // swallow republish errors; a new request will eventually create another job
+            })
+            .finally(() => {
+              this.scheduledRetryTimers.delete(timer);
+            });
+        }, backoffMs);
+
+        this.scheduledRetryTimers.add(timer);
+        this.rabbitChannel.ack(msg);
+      } else {
+        await this.logs.markFailed(payload.requestId, reason);
+        this.rabbitChannel.ack(msg);
+      }
+    }
+  }
+
+  private async enqueueOtpSendJob(payload: {
+    requestId: string;
+    phoneNumber: string;
+    otpCode: string;
+    messageBody: string;
+    purpose: string;
+    retryCount: number;
+  }) {
+    if (!this.rabbitChannel) {
+      throw new Error('RabbitMQ channel not initialized');
+    }
+
+    await this.rabbitChannel.sendToQueue(
+      this.otpSendQueue,
+      Buffer.from(JSON.stringify(payload)),
+      {
+        persistent: true,
+        headers: { 'x-retry-count': payload.retryCount },
+      },
+    );
   }
 
   private normalizeAndValidatePhone(phoneNumber: string): string {
