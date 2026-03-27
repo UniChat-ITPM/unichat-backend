@@ -3,6 +3,8 @@ import { PrismaClient, OtpChannel, OtpPurpose, OtpStatus } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createHash, randomInt } from 'crypto';
 import axios from 'axios';
+import * as jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService implements OnModuleDestroy {
@@ -71,6 +73,7 @@ export class AuthService implements OnModuleDestroy {
     | {
         success: true;
         message: string;
+        accessToken: string;
         isNewUser: boolean;
         requiresProfileCompletion: boolean;
         user: {
@@ -201,6 +204,7 @@ export class AuthService implements OnModuleDestroy {
       message: isNewUser
         ? 'Login success. Welcome to UniChat!'
         : `Login success. Welcome back, ${user.displayName}!`,
+      accessToken: this.signAccessToken(user.id),
       isNewUser,
       requiresProfileCompletion,
       user: responseUser,
@@ -212,6 +216,27 @@ export class AuthService implements OnModuleDestroy {
   }
 
   // ─── Private helpers ───────────────────────────────────────────────
+
+  private getJwtSecret(): string {
+    const secret = process.env['JWT_SECRET'];
+    if (secret) {
+      return secret;
+    }
+    if (process.env['NODE_ENV'] === 'production') {
+      throw new Error('JWT_SECRET is required in production');
+    }
+    return 'unichat-dev-jwt-secret-change-me';
+  }
+
+  private signAccessToken(userId: string): string {
+    return jwt.sign(
+      { sub: userId },
+      this.getJwtSecret(),
+      {
+        expiresIn: process.env['JWT_EXPIRES_IN'] ?? '7d',
+      } as SignOptions,
+    );
+  }
 
   private normalizeAndValidatePhone(phoneNumber: string): string {
     const normalized = phoneNumber.trim().replace(/\s+/g, '');

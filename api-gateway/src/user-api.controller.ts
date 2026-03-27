@@ -1,9 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Param,
+  Post,
   Put,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -13,6 +16,17 @@ import { UpdateUserGatewayDto } from './dto/update-user-gateway.dto';
 @Controller('user')
 export class UserApiController {
   constructor(private readonly apiService: ApiService) {}
+
+  @Get('find-by-phone')
+  findByPhone(@Query('phoneNumber') phoneNumber: string) {
+    return this.apiService.forwardFindUserByPhone(phoneNumber);
+  }
+
+  @Post('create')
+  @HttpCode(200)
+  createUser(@Body() body: { phoneNumber: string }) {
+    return this.apiService.forwardCreateUser(body);
+  }
 
   @Put(':id')
   @HttpCode(200)

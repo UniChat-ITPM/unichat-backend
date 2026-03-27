@@ -2,12 +2,13 @@
   "info": {
     "_postman_id": "unichat-backend-collection",
     "name": "Unichat Backend API",
-    "description": "Complete API collection for Unichat backend services",
+    "description": "Unichat backend APIs. **Public client / mobile base:** `{{gateway_base}}/api` (API Gateway, default port 4225). Web and mobile apps should use this host for: auth OTP, registration complete, user (find/create/update/deactivate), **conversations**, and **messages**. The gateway forwards to the respective microservices. Direct service ports (4226–4230, etc.) are for local debugging or service-to-service use.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "📌 API Gateway (4225)",
+      "description": "Public base URL: `{{gateway_base}}/api`. Clients (web/mobile) should use these routes for auth, registration, user lifecycle, conversations, and messages (same paths as downstream services, e.g. `GET /api/conversations`, `POST /api/messages/text`).",
       "item": [
         {
           "name": "OTP - Request",
@@ -24,7 +25,7 @@
               "raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4225/api/auth/otp/request",
+              "raw": "{{gateway_base}}/api/auth/otp/request",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4225",
@@ -47,7 +48,7 @@
               "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4225/api/auth/otp/verify",
+              "raw": "{{gateway_base}}/api/auth/otp/verify",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4225",
@@ -68,7 +69,7 @@
                   "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/otp/verify",
+                  "raw": "{{gateway_base}}/api/auth/otp/verify",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -95,7 +96,7 @@
                   "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/otp/verify",
+                  "raw": "{{gateway_base}}/api/auth/otp/verify",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -127,7 +128,7 @@
               "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
             },
             "url": {
-              "raw": "http://localhost:4225/api/auth/register/complete",
+              "raw": "{{gateway_base}}/api/auth/register/complete",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4225",
@@ -148,7 +149,7 @@
                   "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -175,7 +176,7 @@
                   "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -202,7 +203,7 @@
                   "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"taken_name\",\n  \"email\": \"john@example.com\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -229,7 +230,7 @@
                   "raw": "{\n  \"phoneNumber\": \"12345\",\n  \"username\": \"ab\",\n  \"email\": \"not-an-email\"\n}"
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -281,7 +282,7 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:4225/api/auth/register/complete",
+              "raw": "{{gateway_base}}/api/auth/register/complete",
               "protocol": "http",
               "host": ["localhost"],
               "port": "4225",
@@ -305,7 +306,7 @@
                   ]
                 },
                 "url": {
-                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
                   "host": ["localhost"],
                   "port": "4225",
@@ -321,11 +322,51 @@
               "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/v1/unichat/profiles/user_550e8400_1711468800000.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             }
           ]
+        },
+        {
+          "name": "User - Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"John Display\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base}}/api/user/{{user_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "user", "{{user_id}}"]
+            },
+            "description": "Forwarded to user-service. Optional fields: displayName, username, email, profilePhoto (base64 or data-URI, max ~10 MB through gateway)."
+          }
+        },
+        {
+          "name": "User - Deactivate",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_base}}/api/user/{{user_id}}/deactivate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "user", "{{user_id}}", "deactivate"]
+            },
+            "description": "Forwarded to user-service `PUT .../user/:id/deactivate`."
+          }
         }
       ]
     },
     {
-      "name": "🔐 Auth Service (4226)",
+      "name": "🔐 Auth Service (4226 — generate only)",
+      "description": "Direct auth-service calls. OTP **verify** for clients is on the API Gateway (`{{gateway_base}}/api/auth/otp/verify`).",
       "item": [
         {
           "name": "OTP - Generate",
@@ -351,7 +392,7 @@
           }
         },
         {
-          "name": "OTP - Verify",
+          "name": "OTP - Verify (use API Gateway)",
           "request": {
             "method": "POST",
             "header": [
@@ -365,18 +406,20 @@
               "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4226/api/auth/otp/verify",
+              "raw": "{{gateway_base}}/api/auth/otp/verify",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4226",
+              "port": "4225",
               "path": ["api", "auth", "otp", "verify"]
-            }
+            },
+            "description": "Same URL clients use. Gateway forwards to auth-service. For service-only testing without the gateway, call auth-service :4226 directly."
           }
         }
       ]
     },
     {
-      "name": "👤 User Service (4227)",
+      "name": "👤 User Service (4227 — internal / service ports)",
+      "description": "**Client apps:** user APIs live on the gateway (same paths as user-service). The first two requests below use `{{gateway_base}}`; **Complete Profile (internal)** and similar still point at user-service **directly** on port 4227 for debugging and gateway forwarding.",
       "item": [
         {
           "name": "Find User by Phone",
@@ -384,10 +427,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:4227/api/user/find-by-phone?phoneNumber=+1234567890",
+              "raw": "{{gateway_base}}/api/user/find-by-phone?phoneNumber=+1234567890",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4227",
+              "port": "4225",
               "path": ["api", "user", "find-by-phone"],
               "query": [
                 {
@@ -413,10 +456,10 @@
               "raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4227/api/user/create",
+              "raw": "{{gateway_base}}/api/user/create",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4227",
+              "port": "4225",
               "path": ["api", "user", "create"]
             }
           }
@@ -504,10 +547,59 @@
       ]
     },
     {
-      "name": "🔑 OTP Service (4228)",
+      "name": "🔑 OTP / login (API Gateway)",
+      "description": "Public paths on the gateway (port 4225). **Request** forwards to otp-service `POST /api/otp/request`. **Verify** forwards to auth-service `POST /api/auth/otp/verify`. For raw otp-service debugging: `http://localhost:4228/api/otp/request`.",
       "item": [
         {
           "name": "Request OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base}}/api/auth/otp/request",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "otp", "request"]
+            },
+            "description": "Client URL: `POST /api/auth/otp/request` on the API Gateway."
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base}}/api/auth/otp/verify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "otp", "verify"]
+            },
+            "description": "Client URL: `POST /api/auth/otp/verify` on the API Gateway."
+          }
+        },
+        {
+          "name": "Request OTP (otp-service direct — debug)",
           "request": {
             "method": "POST",
             "header": [
@@ -526,36 +618,15 @@
               "host": ["localhost"],
               "port": "4228",
               "path": ["api", "otp", "request"]
-            }
-          }
-        },
-        {
-          "name": "Verify OTP",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
             },
-            "url": {
-              "raw": "http://localhost:4228/api/otp/verify",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "4228",
-              "path": ["api", "otp", "verify"]
-            }
+            "description": "Bypasses the gateway; hits otp-service only. Use when isolating otp-service behaviour."
           }
         }
       ]
     },
     {
-      "name": "💬 Conversation Service (4229)",
+      "name": "💬 Conversations (API Gateway → conversation-service :4229)",
+      "description": "Client URL base: `{{gateway_base}}/api/conversations` (gateway forwards to conversation-service). For isolation testing, call `http://localhost:4229/api/conversations` directly.",
       "item": [
         {
           "name": "Conversations - Get All",
@@ -568,10 +639,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4229/api/conversations",
+              "raw": "{{gateway_base}}/api/conversations",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations"]
             }
           }
@@ -587,10 +658,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100"]
             }
           }
@@ -614,10 +685,10 @@
               "raw": "{\n  \"participantUserId\": \"550e8400-e29b-41d4-a716-446655440002\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4229/api/conversations/private",
+              "raw": "{{gateway_base}}/api/conversations/private",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "private"]
             }
           }
@@ -641,10 +712,10 @@
               "raw": "{\n  \"title\": \"Project Discussion\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"participantUserIds\": [\"550e8400-e29b-41d4-a716-446655440002\", \"550e8400-e29b-41d4-a716-446655440003\"]\n}"
             },
             "url": {
-              "raw": "http://localhost:4229/api/conversations/group",
+              "raw": "{{gateway_base}}/api/conversations/group",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "group"]
             }
           }
@@ -668,10 +739,10 @@
               "raw": "{\n  \"userIds\": [\"550e8400-e29b-41d4-a716-446655440004\", \"550e8400-e29b-41d4-a716-446655440005\"]\n}"
             },
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "participants"]
             }
           }
@@ -687,10 +758,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants/550e8400-e29b-41d4-a716-446655440002",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants/550e8400-e29b-41d4-a716-446655440002",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "participants", "550e8400-e29b-41d4-a716-446655440002"]
             }
           }
@@ -706,10 +777,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/promote",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/promote",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "admins", "550e8400-e29b-41d4-a716-446655440002", "promote"]
             }
           }
@@ -725,10 +796,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/demote",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/demote",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "admins", "550e8400-e29b-41d4-a716-446655440002", "demote"]
             }
           }
@@ -744,10 +815,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/leave",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/leave",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "leave"]
             }
           }
@@ -771,10 +842,10 @@
               "raw": "{\n  \"title\": \"New Title\",\n  \"description\": \"New description\",\n  \"imageUrl\": \"https://example.com/new-image.jpg\",\n  \"joinApprovalMode\": \"ADMIN_APPROVAL\",\n  \"memberAddMode\": \"ADMINS_ONLY\",\n  \"onlyAdminsCanPost\": true,\n  \"onlyAdminsCanEditInfo\": true,\n  \"maxMembers\": 100\n}"
             },
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/settings",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/settings",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "settings"]
             }
           }
@@ -798,10 +869,10 @@
               "raw": "{\n  \"muted\": true,\n  \"mutedUntil\": \"2026-12-31T23:59:59Z\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/mute",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/mute",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "mute"]
             }
           }
@@ -825,10 +896,10 @@
               "raw": "{\n  \"archived\": true\n}"
             },
             "url": {
-              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/archive",
+              "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/archive",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4229",
+              "port": "4225",
               "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "archive"]
             }
           }
@@ -836,7 +907,8 @@
       ]
     },
     {
-      "name": "📱 Messaging Service (4230)",
+      "name": "📱 Messages (API Gateway → messaging-service :4230)",
+      "description": "Client URL base: `{{gateway_base}}/api/messages` (gateway forwards to messaging-service). For isolation testing, call `http://localhost:4230/api/messages` directly.",
       "item": [
         {
           "name": "Send Text Message",
@@ -857,10 +929,10 @@
               "raw": "{\n  \"conversationId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"text\": \"Hello, this is a test message\",\n  \"replyToMessageId\": null\n}"
             },
             "url": {
-              "raw": "http://localhost:4230/api/messages/text",
+              "raw": "{{gateway_base}}/api/messages/text",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "text"]
             }
           }
@@ -884,10 +956,10 @@
               "raw": "{\n  \"conversationId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"mediaAssetIds\": [\"550e8400-e29b-41d4-a716-446655440200\"],\n  \"caption\": \"Check out this image\",\n  \"replyToMessageId\": null\n}"
             },
             "url": {
-              "raw": "http://localhost:4230/api/messages/media",
+              "raw": "{{gateway_base}}/api/messages/media",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "media"]
             }
           }
@@ -903,10 +975,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4230/api/messages/conversation/550e8400-e29b-41d4-a716-446655440100?limit=50&cursor=",
+              "raw": "{{gateway_base}}/api/messages/conversation/550e8400-e29b-41d4-a716-446655440100?limit=50&cursor=",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "conversation", "550e8400-e29b-41d4-a716-446655440100"],
               "query": [
                 {
@@ -932,10 +1004,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4230/api/messages/unread-counts/550e8400-e29b-41d4-a716-446655440100",
+              "raw": "{{gateway_base}}/api/messages/unread-counts/550e8400-e29b-41d4-a716-446655440100",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "unread-counts", "550e8400-e29b-41d4-a716-446655440100"]
             }
           }
@@ -951,10 +1023,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300",
+              "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
             }
           }
@@ -978,10 +1050,10 @@
               "raw": "{\n  \"targetConversationId\": \"550e8400-e29b-41d4-a716-446655440101\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/forward",
+              "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/forward",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "forward"]
             }
           }
@@ -997,10 +1069,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/delivered",
+              "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/delivered",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "delivered"]
             }
           }
@@ -1016,10 +1088,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/read",
+              "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/read",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "read"]
             }
           }
@@ -1043,10 +1115,10 @@
               "raw": "{\n  \"newText\": \"Updated message text\"\n}"
             },
             "url": {
-              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/edit",
+              "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/edit",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "edit"]
             }
           }
@@ -1062,10 +1134,10 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300",
+              "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "4230",
+              "port": "4225",
               "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
             }
           }
@@ -1074,6 +1146,10 @@
     }
   ],
   "variable": [
+    {
+      "key": "gateway_base",
+      "value": "http://localhost:4225"
+    },
     {
       "key": "base_url",
       "value": "http://localhost"

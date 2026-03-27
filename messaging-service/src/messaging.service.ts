@@ -145,7 +145,11 @@ export class MessagingService {
     // If it's recipient marking it:
     if (msg.senderId !== userId && msg.status === MessageStatus.SENT) {
       await this.messageRepository.updateMessageStatus(messageId, MessageStatus.DELIVERED);
-      this.realtimePublisher.publishMessageStatusUpdated({ messageId, status: MessageStatus.DELIVERED });
+      this.realtimePublisher.publishMessageStatusUpdated({
+        conversationId: msg.conversationId,
+        messageId,
+        status: MessageStatus.DELIVERED,
+      });
     }
 
     return { success: true };
@@ -157,7 +161,11 @@ export class MessagingService {
 
     if (msg.senderId !== userId && (msg.status === MessageStatus.SENT || msg.status === MessageStatus.DELIVERED)) {
       await this.messageRepository.updateMessageStatus(messageId, MessageStatus.READ);
-      this.realtimePublisher.publishMessageStatusUpdated({ messageId, status: MessageStatus.READ });
+      this.realtimePublisher.publishMessageStatusUpdated({
+        conversationId: msg.conversationId,
+        messageId,
+        status: MessageStatus.READ,
+      });
     }
 
     return { success: true };
@@ -176,7 +184,11 @@ export class MessagingService {
       newText
     );
 
-    this.realtimePublisher.publishMessageEdited({ messageId: updated.id, newText });
+    this.realtimePublisher.publishMessageEdited({
+      conversationId: message.conversationId,
+      messageId: updated.id,
+      newText,
+    });
     return updated;
   }
 
@@ -184,7 +196,10 @@ export class MessagingService {
     const message = await this.fetchOwnMessageOrThrow(messageId, userId);
 
     await this.messageRepository.softDeleteMessage(messageId);
-    this.realtimePublisher.publishMessageDeleted({ messageId });
+    this.realtimePublisher.publishMessageDeleted({
+      conversationId: message.conversationId,
+      messageId,
+    });
 
     return { success: true, message: 'Message deleted' };
   }
