@@ -78,7 +78,7 @@ npm run up:otp-service
 npm run up:api-gateway
 npm run up:conversation-service
 npm run up:messaging-service
-npm run up:media-servicenpm run up:otp-service
+npm run up:media-service
 npm run up:moderation-service
 npm run up:conversion-service
 npm run up:realtime-service

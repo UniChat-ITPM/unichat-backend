@@ -52,8 +52,275 @@
               "host": ["localhost"],
               "port": "4225",
               "path": ["api", "auth", "otp", "verify"]
+            },
+            "description": "Verify OTP and log in. Response includes `requiresProfileCompletion` flag. If true, call Register Complete next."
+          },
+          "response": [
+            {
+              "name": "New user (profile incomplete)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/otp/verify",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "otp", "verify"]
+                }
+              },
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login success. Welcome to UniChat!\",\n  \"isNewUser\": true,\n  \"requiresProfileCompletion\": true,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"+1234567890\",\n    \"username\": null,\n    \"email\": null,\n    \"avatarUrl\": null,\n    \"profileCompleted\": false,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Returning user (profile completed)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/otp/verify",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "otp", "verify"]
+                }
+              },
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login success. Welcome back, john_doe!\",\n  \"isNewUser\": false,\n  \"requiresProfileCompletion\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             }
-          }
+          ]
+        },
+        {
+          "name": "Register Complete (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4225/api/auth/register/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "register", "complete"]
+            },
+            "description": "Complete user registration after OTP verify. Send JSON body with optional base64 profilePhoto.\n\nValidation rules:\n- phoneNumber: E.164 format (e.g. +94771234567)\n- username: 3-50 chars, alphanumeric + underscore only, must be unique\n- email: valid email, must be unique\n- profilePhoto: optional, base64 string or data-URI (image/jpeg, image/png, image/webp, image/gif, max 5 MB)\n\nBehavior:\n- If profile already completed: returns existing user (200)\n- If user exists but incomplete: updates and returns (200)\n- If user does not exist: creates new user (200)\n\nErrors:\n- 400: validation failure or invalid image\n- 409: username or email already taken\n- 500: Cloudinary upload failure"
+          },
+          "response": [
+            {
+              "name": "Profile completed (existing user)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Already completed (idempotent)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "409 - Username taken",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"taken_name\",\n  \"email\": \"john@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Username is already taken\",\n  \"error\": \"Conflict\"\n}"
+            },
+            {
+              "name": "400 - Validation error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"12345\",\n  \"username\": \"ab\",\n  \"email\": \"not-an-email\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": [\n    \"Phone number must be in E.164 format, e.g. +94771234567\",\n    \"Username must be at least 3 characters\",\n    \"Email must be a valid email address\"\n  ],\n  \"error\": \"Bad Request\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register Complete (Multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "phoneNumber",
+                  "value": "+1234567890",
+                  "type": "text",
+                  "description": "E.164 format phone number"
+                },
+                {
+                  "key": "username",
+                  "value": "john_doe",
+                  "type": "text",
+                  "description": "3-50 chars, alphanumeric + underscore, must be unique"
+                },
+                {
+                  "key": "email",
+                  "value": "john@example.com",
+                  "type": "text",
+                  "description": "Valid email address, must be unique"
+                },
+                {
+                  "key": "profilePhoto",
+                  "type": "file",
+                  "src": "",
+                  "description": "Profile photo file (JPEG/PNG/WebP/GIF, max 5 MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:4225/api/auth/register/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "register", "complete"]
+            },
+            "description": "Complete user registration with file upload via multipart/form-data. Same behavior as the JSON variant, but the profile photo is sent as a file instead of base64.\n\nThe gateway converts the uploaded file to base64 before forwarding to user-service internally."
+          },
+          "response": [
+            {
+              "name": "Profile completed with photo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "phoneNumber", "value": "+1234567890", "type": "text" },
+                    { "key": "username", "value": "john_doe", "type": "text" },
+                    { "key": "email", "value": "john@example.com", "type": "text" },
+                    { "key": "profilePhoto", "type": "file", "src": "avatar.png" }
+                  ]
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/v1/unichat/profiles/user_550e8400_1711468800000.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            }
+          ]
         }
       ]
     },
@@ -153,6 +420,86 @@
               "path": ["api", "user", "create"]
             }
           }
+        },
+        {
+          "name": "Complete Profile (internal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4227/api/user/profile/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4227",
+              "path": ["api", "user", "profile", "complete"]
+            },
+            "description": "Internal endpoint called by api-gateway. Do not call directly from clients.\n\nSets username, email, and optional profile photo (base64) for a user. Uploads photo to Cloudinary.\n\nReturns 409 if username or email is already taken by another user."
+          },
+          "response": [
+            {
+              "name": "Success - profile completed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4227/api/user/profile/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4227",
+                  "path": ["api", "user", "profile", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": null,\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "409 - Email already in use",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"taken@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4227/api/user/profile/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4227",
+                  "path": ["api", "user", "profile", "complete"]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Email is already in use\",\n  \"error\": \"Conflict\"\n}"
+            }
+          ]
         }
       ]
     },

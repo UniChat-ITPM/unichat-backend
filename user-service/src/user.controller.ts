@@ -1,14 +1,27 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  HttpCode,
+  InternalServerErrorException,
+  Post,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserService } from './user.service';
+import { CompleteProfileDto } from './dto/complete-profile.dto';
+import {
+  CloudinaryUploadError,
+  ImageValidationError,
+} from './cloudinary.service';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  /**
-   * Called by auth-service after OTP verification
-   * to look up an existing user by phone number.
-   */
   @Get('find-by-phone')
   async findByPhone(@Query('phoneNumber') phoneNumber: string) {
     const user = await this.userService.findByPhoneNumber(phoneNumber);
@@ -18,13 +31,31 @@ export class UserController {
     return { found: true, user };
   }
 
-  /**
-   * Called by auth-service when user does not exist yet.
-   * Creates a new user with phoneVerified = true.
-   */
   @Post('create')
   async createUser(@Body() body: { phoneNumber: string }) {
     const user = await this.userService.createUser(body.phoneNumber);
     return { success: true, user };
+  }
+
+  @Post('profile/complete')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async completeProfile(@Body() dto: CompleteProfileDto) {
+    try {
+      return await this.userService.completeProfile(dto);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      if (error instanceof ImageValidationError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof CloudinaryUploadError) {
+        throw new InternalServerErrorException(error.message);
+      }
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while completing profile',
+      );
+    }
   }
 }
