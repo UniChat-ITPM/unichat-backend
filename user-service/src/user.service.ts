@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleDestroy,
 } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -12,10 +13,12 @@ import {
   ImageValidationError,
 } from './cloudinary.service';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 const USER_SELECT = {
   id: true,
   phoneNumber: true,
+  accountStatus: true,
   displayName: true,
   username: true,
   email: true,
@@ -75,7 +78,11 @@ export class UserService implements OnModuleDestroy {
       return { success: true, isNewUser: false, user: existingUser };
     }
 
-    await this.checkUniqueness(dto.username, dto.email, existingUser?.id);
+    await this.checkUniqueness({
+      username: dto.username,
+      email: dto.email,
+      currentUserId: existingUser?.id,
+    });
 
     let avatarUrl: string | null = null;
     if (dto.profilePhoto) {
@@ -115,29 +122,109 @@ export class UserService implements OnModuleDestroy {
     return { success: true, isNewUser: true, user: newUser };
   }
 
+  async updateUserById(
+    userId: string,
+    dto: UpdateUserDto,
+  ): Promise<{ success: true; user: Record<string, unknown> }> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: USER_SELECT,
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.checkUniqueness({
+      username: dto.username,
+      email: dto.email,
+      currentUserId: existingUser.id,
+    });
+
+    let avatarUrl: string | null = null;
+    if (dto.profilePhoto) {
+      avatarUrl = await this.uploadPhoto(dto.profilePhoto, existingUser.id);
+    }
+
+    const data: {
+      displayName?: string;
+      username?: string;
+      email?: string;
+      avatarUrl?: string;
+    } = {};
+
+    if (dto.displayName !== undefined) data.displayName = dto.displayName;
+    if (dto.username !== undefined) data.username = dto.username;
+    if (dto.email !== undefined) data.email = dto.email;
+    if (avatarUrl) data.avatarUrl = avatarUrl;
+
+    if (Object.keys(data).length === 0) {
+      return { success: true, user: existingUser };
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: existingUser.id },
+      data,
+      select: USER_SELECT,
+    });
+
+    this.logger.log(`User profile updated: ${updatedUser.id}`);
+    return { success: true, user: updatedUser };
+  }
+
+  async deactivateUserById(
+    userId: string,
+  ): Promise<{ success: true; user: Record<string, unknown> }> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: USER_SELECT,
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (existingUser.accountStatus === false) {
+      return { success: true, user: existingUser };
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: existingUser.id },
+      data: { accountStatus: false },
+      select: USER_SELECT,
+    });
+
+    this.logger.log(`User account deactivated: ${updatedUser.id}`);
+    return { success: true, user: updatedUser };
+  }
+
   async onModuleDestroy() {
     await this.prisma.$disconnect();
   }
 
-  private async checkUniqueness(
-    username: string,
-    email: string,
-    currentUserId?: string,
-  ) {
-    const existingByUsername = await this.prisma.user.findUnique({
-      where: { username },
-      select: { id: true },
-    });
-    if (existingByUsername && existingByUsername.id !== currentUserId) {
-      throw new ConflictException('Username is already taken');
+  private async checkUniqueness(input: {
+    username?: string;
+    email?: string;
+    currentUserId?: string;
+  }) {
+    if (input.username !== undefined) {
+      const existingByUsername = await this.prisma.user.findUnique({
+        where: { username: input.username },
+        select: { id: true },
+      });
+      if (existingByUsername && existingByUsername.id !== input.currentUserId) {
+        throw new ConflictException('Username is already taken');
+      }
     }
 
-    const existingByEmail = await this.prisma.user.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-    if (existingByEmail && existingByEmail.id !== currentUserId) {
-      throw new ConflictException('Email is already in use');
+    if (input.email !== undefined) {
+      const existingByEmail = await this.prisma.user.findUnique({
+        where: { email: input.email },
+        select: { id: true },
+      });
+      if (existingByEmail && existingByEmail.id !== input.currentUserId) {
+        throw new ConflictException('Email is already in use');
+      }
     }
   }
 
