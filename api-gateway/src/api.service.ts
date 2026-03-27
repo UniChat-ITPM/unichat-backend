@@ -4,6 +4,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 
@@ -71,6 +72,70 @@ export class ApiService {
       const reason =
         error instanceof Error ? error.message : 'user-service unreachable';
       this.logger.error(`Failed to forward profile completion: ${reason}`);
+      throw new InternalServerErrorException(
+        'Unable to reach user service. Please try again.',
+      );
+    }
+  }
+
+  async forwardUpdateUser(
+    userId: string,
+    payload: {
+      displayName?: string;
+      username?: string;
+      email?: string;
+      profilePhoto?: string;
+    },
+  ) {
+    try {
+      const response = await axios.put(
+        `${this.userServiceBaseUrl}/user/${userId}`,
+        payload,
+        { maxBodyLength: 10 * 1024 * 1024 },
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message ?? 'User update failed';
+
+        if (status === 409) throw new ConflictException(message);
+        if (status === 400) throw new BadRequestException(message);
+        if (status === 404) throw new NotFoundException(message);
+
+        this.logger.error(`user-service user/:id responded with ${status}`);
+        throw new InternalServerErrorException(message);
+      }
+
+      const reason =
+        error instanceof Error ? error.message : 'user-service unreachable';
+      this.logger.error(`Failed to forward user update: ${reason}`);
+      throw new InternalServerErrorException(
+        'Unable to reach user service. Please try again.',
+      );
+    }
+  }
+
+  async forwardDeactivateUser(userId: string) {
+    try {
+      const response = await axios.put(
+        `${this.userServiceBaseUrl}/user/${userId}/deactivate`,
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message ?? 'User deactivation failed';
+
+        if (status === 404) throw new NotFoundException(message);
+
+        this.logger.error(`user-service user/:id/deactivate responded with ${status}`);
+        throw new InternalServerErrorException(message);
+      }
+
+      const reason =
+        error instanceof Error ? error.message : 'user-service unreachable';
+      this.logger.error(`Failed to forward user deactivation: ${reason}`);
       throw new InternalServerErrorException(
         'Unable to reach user service. Please try again.',
       );

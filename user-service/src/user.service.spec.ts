@@ -186,4 +186,139 @@ describe('UserService', () => {
       expect(result.user).toEqual(newUser);
     });
   });
+
+  describe('updateUserById', () => {
+    it('should update user fields by id', async () => {
+      const existingUser = {
+        id: 'u10',
+        phoneNumber: '+94770000000',
+        displayName: 'old_name',
+        username: 'old_name',
+        email: 'old@example.com',
+        avatarUrl: null,
+        profileCompleted: true,
+        status: 'ACTIVE',
+      };
+
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce(existingUser)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+
+      const updatedUser = {
+        ...existingUser,
+        displayName: 'new_name',
+        username: 'new_name',
+        email: 'new@example.com',
+      };
+      mockPrisma.user.update.mockResolvedValueOnce(updatedUser);
+
+      const result = await service.updateUserById('u10', {
+        displayName: 'new_name',
+        username: 'new_name',
+        email: 'new@example.com',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual(updatedUser);
+      expect(mockPrisma.user.update).toHaveBeenCalled();
+    });
+
+    it('should return existing user when no update fields provided', async () => {
+      const existingUser = {
+        id: 'u11',
+        phoneNumber: '+94771111111',
+        displayName: 'same',
+        username: 'same',
+        email: 'same@example.com',
+        avatarUrl: null,
+        profileCompleted: true,
+        status: 'ACTIVE',
+      };
+      mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+
+      const result = await service.updateUserById('u11', {});
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual(existingUser);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw conflict when username is already taken', async () => {
+      const existingUser = {
+        id: 'u12',
+        phoneNumber: '+94772222222',
+        displayName: 'user12',
+        username: 'user12',
+        email: 'user12@example.com',
+        avatarUrl: null,
+        profileCompleted: true,
+        status: 'ACTIVE',
+      };
+      mockPrisma.user.findUnique
+        .mockResolvedValueOnce(existingUser)
+        .mockResolvedValueOnce({ id: 'u-other' });
+
+      await expect(
+        service.updateUserById('u12', { username: 'taken_name' }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('deactivateUserById', () => {
+    it('should set accountStatus=false for active user', async () => {
+      const existingUser = {
+        id: 'u20',
+        phoneNumber: '+94773333333',
+        accountStatus: true,
+        displayName: 'user20',
+        username: 'user20',
+        email: 'user20@example.com',
+        avatarUrl: null,
+        profileCompleted: true,
+        status: 'ACTIVE',
+      };
+
+      const deactivatedUser = {
+        ...existingUser,
+        accountStatus: false,
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+      mockPrisma.user.update.mockResolvedValueOnce(deactivatedUser);
+
+      const result = await service.deactivateUserById('u20');
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual(deactivatedUser);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'u20' },
+          data: { accountStatus: false },
+        }),
+      );
+    });
+
+    it('should return existing user when already deactivated', async () => {
+      const existingUser = {
+        id: 'u21',
+        phoneNumber: '+94774444444',
+        accountStatus: false,
+        displayName: 'user21',
+        username: 'user21',
+        email: 'user21@example.com',
+        avatarUrl: null,
+        profileCompleted: true,
+        status: 'ACTIVE',
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+
+      const result = await service.deactivateUserById('u21');
+
+      expect(result.success).toBe(true);
+      expect(result.user).toEqual(existingUser);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
+  });
 });

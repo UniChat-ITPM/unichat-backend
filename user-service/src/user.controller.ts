@@ -6,13 +6,17 @@ import {
   Get,
   HttpCode,
   InternalServerErrorException,
+  NotFoundException,
+  Param,
   Post,
+  Put,
   Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import {
   CloudinaryUploadError,
   ImageValidationError,
@@ -55,6 +59,46 @@ export class UserController {
       }
       throw new InternalServerErrorException(
         'An unexpected error occurred while completing profile',
+      );
+    }
+  }
+
+  @Put(':id')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    try {
+      return await this.userService.updateUserById(id, dto);
+    } catch (error) {
+      if (error instanceof ConflictException || error instanceof NotFoundException) {
+        throw error;
+      }
+      if (error instanceof ImageValidationError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof CloudinaryUploadError) {
+        throw new InternalServerErrorException(error.message);
+      }
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while updating user details',
+      );
+    }
+  }
+
+  @Put(':id/deactivate')
+  @HttpCode(200)
+  async deactivateUser(@Param('id') id: string) {
+    try {
+      return await this.userService.deactivateUserById(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'An unexpected error occurred while deactivating account',
       );
     }
   }

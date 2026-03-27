@@ -200,6 +200,7 @@ enum AuditAction {
 model User {
   id               String     @id @default(uuid()) @db.Uuid
   phoneNumber      String     @unique @db.VarChar(20)
+  accountStatus    Boolean    @default(true)
   phoneVerified    Boolean    @default(false)
   profileCompleted Boolean    @default(false)
   username         String?    @unique @db.VarChar(50)
