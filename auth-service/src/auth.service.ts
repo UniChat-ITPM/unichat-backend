@@ -72,11 +72,16 @@ export class AuthService implements OnModuleDestroy {
         success: true;
         message: string;
         isNewUser: boolean;
+        requiresProfileCompletion: boolean;
         user: {
           id: string;
           phoneNumber: string;
           displayName: string;
           username?: string | null;
+          email?: string | null;
+          avatarUrl?: string | null;
+          profilePhoto?: string | null;
+          profileCompleted?: boolean;
         };
       }
     | { success: false; message: string }
@@ -148,6 +153,10 @@ export class AuthService implements OnModuleDestroy {
       phoneNumber: string;
       displayName: string;
       username?: string | null;
+      email?: string | null;
+      avatarUrl?: string | null;
+      profilePhoto?: string | null;
+      profileCompleted?: boolean;
     };
 
     try {
@@ -157,13 +166,11 @@ export class AuthService implements OnModuleDestroy {
       );
 
       if (findResponse.data?.found) {
-        // Existing user → return display name
         user = findResponse.data.user;
         this.logger.log(
           `Existing user found for ${normalizedPhone}: ${user.displayName}`,
         );
       } else {
-        // New user → request user-service to create
         const createResponse = await axios.post(
           `${this.userServiceBaseUrl}/user/create`,
           { phoneNumber: normalizedPhone },
@@ -182,13 +189,21 @@ export class AuthService implements OnModuleDestroy {
       };
     }
 
+    const requiresProfileCompletion = !user.profileCompleted;
+    const responseUser = {
+      ...user,
+      // Keep backward compatibility while exposing the expected field name.
+      profilePhoto: user.avatarUrl ?? null,
+    };
+
     return {
       success: true,
       message: isNewUser
         ? 'Login success. Welcome to UniChat!'
         : `Login success. Welcome back, ${user.displayName}!`,
       isNewUser,
-      user,
+      requiresProfileCompletion,
+      user: responseUser,
     };
   }
 

@@ -198,21 +198,22 @@ enum AuditAction {
 //
 
 model User {
-  id            String     @id @default(uuid()) @db.Uuid
-  phoneNumber   String     @unique @db.VarChar(20)
-  phoneVerified Boolean    @default(false)
-  username      String?    @unique @db.VarChar(50)
-  displayName   String     @db.VarChar(120)
-  bio           String?    @db.VarChar(255)
-  avatarUrl     String?    @db.Text
-  email         String?    @unique @db.VarChar(150)
-  gender        Gender?
-  dateOfBirth   DateTime?
-  status        UserStatus @default(ACTIVE)
-  lastSeenAt    DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  deletedAt     DateTime?
+  id               String     @id @default(uuid()) @db.Uuid
+  phoneNumber      String     @unique @db.VarChar(20)
+  phoneVerified    Boolean    @default(false)
+  profileCompleted Boolean    @default(false)
+  username         String?    @unique @db.VarChar(50)
+  displayName      String     @db.VarChar(120)
+  bio              String?    @db.VarChar(255)
+  avatarUrl        String?    @db.Text
+  email            String?    @unique @db.VarChar(150)
+  gender           Gender?
+  dateOfBirth      DateTime?
+  status           UserStatus @default(ACTIVE)
+  lastSeenAt       DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
 
   privacySetting UserPrivacySetting?
   sessions       DeviceSession[]

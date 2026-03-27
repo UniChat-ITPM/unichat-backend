@@ -1,0 +1,1094 @@
+{
+  "info": {
+    "_postman_id": "unichat-backend-collection",
+    "name": "Unichat Backend API",
+    "description": "Complete API collection for Unichat backend services",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "📌 API Gateway (4225)",
+      "item": [
+        {
+          "name": "OTP - Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4225/api/auth/otp/request",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "otp", "request"]
+            }
+          }
+        },
+        {
+          "name": "OTP - Verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4225/api/auth/otp/verify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "otp", "verify"]
+            },
+            "description": "Verify OTP and log in. Response includes `requiresProfileCompletion` flag. If true, call Register Complete next."
+          },
+          "response": [
+            {
+              "name": "New user (profile incomplete)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/otp/verify",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "otp", "verify"]
+                }
+              },
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login success. Welcome to UniChat!\",\n  \"isNewUser\": true,\n  \"requiresProfileCompletion\": true,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"+1234567890\",\n    \"username\": null,\n    \"email\": null,\n    \"avatarUrl\": null,\n    \"profileCompleted\": false,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Returning user (profile completed)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/otp/verify",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "otp", "verify"]
+                }
+              },
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login success. Welcome back, john_doe!\",\n  \"isNewUser\": false,\n  \"requiresProfileCompletion\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register Complete (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4225/api/auth/register/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "register", "complete"]
+            },
+            "description": "Complete user registration after OTP verify. Send JSON body with optional base64 profilePhoto.\n\nValidation rules:\n- phoneNumber: E.164 format (e.g. +94771234567)\n- username: 3-50 chars, alphanumeric + underscore only, must be unique\n- email: valid email, must be unique\n- profilePhoto: optional, base64 string or data-URI (image/jpeg, image/png, image/webp, image/gif, max 5 MB)\n\nBehavior:\n- If profile already completed: returns existing user (200)\n- If user exists but incomplete: updates and returns (200)\n- If user does not exist: creates new user (200)\n\nErrors:\n- 400: validation failure or invalid image\n- 409: username or email already taken\n- 500: Cloudinary upload failure"
+          },
+          "response": [
+            {
+              "name": "Profile completed (existing user)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "Already completed (idempotent)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "409 - Username taken",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"taken_name\",\n  \"email\": \"john@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Username is already taken\",\n  \"error\": \"Conflict\"\n}"
+            },
+            {
+              "name": "400 - Validation error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"12345\",\n  \"username\": \"ab\",\n  \"email\": \"not-an-email\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": [\n    \"Phone number must be in E.164 format, e.g. +94771234567\",\n    \"Username must be at least 3 characters\",\n    \"Email must be a valid email address\"\n  ],\n  \"error\": \"Bad Request\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register Complete (Multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "phoneNumber",
+                  "value": "+1234567890",
+                  "type": "text",
+                  "description": "E.164 format phone number"
+                },
+                {
+                  "key": "username",
+                  "value": "john_doe",
+                  "type": "text",
+                  "description": "3-50 chars, alphanumeric + underscore, must be unique"
+                },
+                {
+                  "key": "email",
+                  "value": "john@example.com",
+                  "type": "text",
+                  "description": "Valid email address, must be unique"
+                },
+                {
+                  "key": "profilePhoto",
+                  "type": "file",
+                  "src": "",
+                  "description": "Profile photo file (JPEG/PNG/WebP/GIF, max 5 MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:4225/api/auth/register/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "auth", "register", "complete"]
+            },
+            "description": "Complete user registration with file upload via multipart/form-data. Same behavior as the JSON variant, but the profile photo is sent as a file instead of base64.\n\nThe gateway converts the uploaded file to base64 before forwarding to user-service internally."
+          },
+          "response": [
+            {
+              "name": "Profile completed with photo",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "phoneNumber", "value": "+1234567890", "type": "text" },
+                    { "key": "username", "value": "john_doe", "type": "text" },
+                    { "key": "email", "value": "john@example.com", "type": "text" },
+                    { "key": "profilePhoto", "type": "file", "src": "avatar.png" }
+                  ]
+                },
+                "url": {
+                  "raw": "http://localhost:4225/api/auth/register/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "auth", "register", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/v1/unichat/profiles/user_550e8400_1711468800000.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔐 Auth Service (4226)",
+      "item": [
+        {
+          "name": "OTP - Generate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"purpose\": \"LOGIN\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4226/api/auth/otp/generate",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4226",
+              "path": ["api", "auth", "otp", "generate"]
+            }
+          }
+        },
+        {
+          "name": "OTP - Verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4226/api/auth/otp/verify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4226",
+              "path": ["api", "auth", "otp", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 User Service (4227)",
+      "item": [
+        {
+          "name": "Find User by Phone",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4227/api/user/find-by-phone?phoneNumber=+1234567890",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4227",
+              "path": ["api", "user", "find-by-phone"],
+              "query": [
+                {
+                  "key": "phoneNumber",
+                  "value": "+1234567890"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4227/api/user/create",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4227",
+              "path": ["api", "user", "create"]
+            }
+          }
+        },
+        {
+          "name": "Complete Profile (internal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4227/api/user/profile/complete",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4227",
+              "path": ["api", "user", "profile", "complete"]
+            },
+            "description": "Internal endpoint called by api-gateway. Do not call directly from clients.\n\nSets username, email, and optional profile photo (base64) for a user. Uploads photo to Cloudinary.\n\nReturns 409 if username or email is already taken by another user."
+          },
+          "response": [
+            {
+              "name": "Success - profile completed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"profilePhoto\": null\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4227/api/user/profile/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4227",
+                  "path": ["api", "user", "profile", "complete"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": null,\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
+            },
+            {
+              "name": "409 - Email already in use",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"username\": \"john_doe\",\n  \"email\": \"taken@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:4227/api/user/profile/complete",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4227",
+                  "path": ["api", "user", "profile", "complete"]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Email is already in use\",\n  \"error\": \"Conflict\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔑 OTP Service (4228)",
+      "item": [
+        {
+          "name": "Request OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4228/api/otp/request",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4228",
+              "path": ["api", "otp", "request"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+1234567890\",\n  \"otpCode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4228/api/otp/verify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4228",
+              "path": ["api", "otp", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💬 Conversation Service (4229)",
+      "item": [
+        {
+          "name": "Conversations - Get All",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4229/api/conversations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations"]
+            }
+          }
+        },
+        {
+          "name": "Conversations - Get By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100"]
+            }
+          }
+        },
+        {
+          "name": "Conversations - Create Private",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participantUserId\": \"550e8400-e29b-41d4-a716-446655440002\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/private",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "private"]
+            }
+          }
+        },
+        {
+          "name": "Conversations - Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Project Discussion\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"participantUserIds\": [\"550e8400-e29b-41d4-a716-446655440002\", \"550e8400-e29b-41d4-a716-446655440003\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/group",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "group"]
+            }
+          }
+        },
+        {
+          "name": "Add Participants",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userIds\": [\"550e8400-e29b-41d4-a716-446655440004\", \"550e8400-e29b-41d4-a716-446655440005\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "participants"]
+            }
+          }
+        },
+        {
+          "name": "Remove Participant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants/550e8400-e29b-41d4-a716-446655440002",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "participants", "550e8400-e29b-41d4-a716-446655440002"]
+            }
+          }
+        },
+        {
+          "name": "Promote to Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/promote",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "admins", "550e8400-e29b-41d4-a716-446655440002", "promote"]
+            }
+          }
+        },
+        {
+          "name": "Demote Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/demote",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "admins", "550e8400-e29b-41d4-a716-446655440002", "demote"]
+            }
+          }
+        },
+        {
+          "name": "Leave Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/leave",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "leave"]
+            }
+          }
+        },
+        {
+          "name": "Update Group Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Title\",\n  \"description\": \"New description\",\n  \"imageUrl\": \"https://example.com/new-image.jpg\",\n  \"joinApprovalMode\": \"ADMIN_APPROVAL\",\n  \"memberAddMode\": \"ADMINS_ONLY\",\n  \"onlyAdminsCanPost\": true,\n  \"onlyAdminsCanEditInfo\": true,\n  \"maxMembers\": 100\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/settings",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Mute Conversation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"muted\": true,\n  \"mutedUntil\": \"2026-12-31T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/mute",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "mute"]
+            }
+          }
+        },
+        {
+          "name": "Archive Conversation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"archived\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4229/api/conversations/550e8400-e29b-41d4-a716-446655440100/archive",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4229",
+              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "archive"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📱 Messaging Service (4230)",
+      "item": [
+        {
+          "name": "Send Text Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"text\": \"Hello, this is a test message\",\n  \"replyToMessageId\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/text",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "text"]
+            }
+          }
+        },
+        {
+          "name": "Send Media Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"mediaAssetIds\": [\"550e8400-e29b-41d4-a716-446655440200\"],\n  \"caption\": \"Check out this image\",\n  \"replyToMessageId\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/media",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "media"]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/conversation/550e8400-e29b-41d4-a716-446655440100?limit=50&cursor=",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "conversation", "550e8400-e29b-41d4-a716-446655440100"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "cursor",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/unread-counts/550e8400-e29b-41d4-a716-446655440100",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "unread-counts", "550e8400-e29b-41d4-a716-446655440100"]
+            }
+          }
+        },
+        {
+          "name": "Get Message By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
+            }
+          }
+        },
+        {
+          "name": "Forward Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetConversationId\": \"550e8400-e29b-41d4-a716-446655440101\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/forward",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "forward"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Delivered",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/delivered",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "delivered"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/read",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "read"]
+            }
+          }
+        },
+        {
+          "name": "Edit Message",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newText\": \"Updated message text\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300/edit",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "edit"]
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-user-id",
+                "value": "550e8400-e29b-41d4-a716-446655440001"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:4230/api/messages/550e8400-e29b-41d4-a716-446655440300",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4230",
+              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost"
+    },
+    {
+      "key": "user_id",
+      "value": "550e8400-e29b-41d4-a716-446655440001"
+    },
+    {
+      "key": "conversation_id",
+      "value": "550e8400-e29b-41d4-a716-446655440100"
+    },
+    {
+      "key": "target_user_id",
+      "value": "550e8400-e29b-41d4-a716-446655440002"
+    }
+  ]
+}
