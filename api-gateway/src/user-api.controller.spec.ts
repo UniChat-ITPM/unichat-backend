@@ -15,6 +15,8 @@ describe('UserApiController – PUT /api/user/:id routes (e2e)', () => {
       forwardCompleteProfile: jest.fn(),
       forwardUpdateUser: jest.fn(),
       forwardDeactivateUser: jest.fn(),
+      forwardFindUserByPhone: jest.fn(),
+      forwardCreateUser: jest.fn(),
     } as unknown as jest.Mocked<ApiService>;
 
     const module: TestingModule = await Test.createTestingModule({

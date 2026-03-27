@@ -141,4 +141,62 @@ export class ApiService {
       );
     }
   }
+
+  async forwardFindUserByPhone(phoneNumber: string) {
+    try {
+      const response = await axios.get(
+        `${this.userServiceBaseUrl}/user/find-by-phone`,
+        { params: { phoneNumber } },
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const status = error.response.status;
+        const message =
+          error.response.data?.message ?? 'User lookup failed';
+
+        if (status === 400) throw new BadRequestException(message);
+
+        this.logger.error(
+          `user-service find-by-phone responded with ${status}`,
+        );
+        throw new InternalServerErrorException(message);
+      }
+
+      const reason =
+        error instanceof Error ? error.message : 'user-service unreachable';
+      this.logger.error(`Failed to forward find-by-phone: ${reason}`);
+      throw new InternalServerErrorException(
+        'Unable to reach user service. Please try again.',
+      );
+    }
+  }
+
+  async forwardCreateUser(body: { phoneNumber: string }) {
+    try {
+      const response = await axios.post(
+        `${this.userServiceBaseUrl}/user/create`,
+        body,
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const status = error.response.status;
+        const message =
+          error.response.data?.message ?? 'User creation failed';
+
+        if (status === 400) throw new BadRequestException(message);
+
+        this.logger.error(`user-service create responded with ${status}`);
+        throw new InternalServerErrorException(message);
+      }
+
+      const reason =
+        error instanceof Error ? error.message : 'user-service unreachable';
+      this.logger.error(`Failed to forward user create: ${reason}`);
+      throw new InternalServerErrorException(
+        'Unable to reach user service. Please try again.',
+      );
+    }
+  }
 }

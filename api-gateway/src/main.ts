@@ -6,10 +6,27 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: process.env['CORS_ORIGIN']?.split(',') ?? true,
+    credentials: true,
+  });
+
+  const expressApp = app.getHttpAdapter().getInstance() as express.Express;
+  const realtimeTarget =
+    process.env['REALTIME_SERVICE_URL'] ?? 'http://localhost:8228';
+  const socketIoProxy = createProxyMiddleware({
+    target: realtimeTarget,
+    changeOrigin: true,
+    ws: true,
+  });
+  expressApp.use('/socket.io', socketIoProxy);
+
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   app.useGlobalPipes(
@@ -19,6 +36,7 @@ async function bootstrap() {
   app.use(express.urlencoded({ limit: '2mb', extended: true }));
   const port = process.env.PORT || 4225;
   await app.listen(port);
+  app.getHttpServer().on('upgrade', socketIoProxy.upgrade);
   Logger.log(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   );
