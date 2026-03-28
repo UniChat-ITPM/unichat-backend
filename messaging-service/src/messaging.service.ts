@@ -7,7 +7,7 @@ import {
 import { MessageRepository } from './repositories/message.repository';
 import { ConversationClientService } from './integrations/conversation-client.service';
 import { RealtimePublisherService } from './integrations/realtime-publisher.service';
-import { MessageType, MessageStatus } from '@prisma/client';
+import { MessageType, MessageStatus, MediaType } from '@prisma/client';
 import {
   SendTextMessageDto,
   SendMediaMessageDto,
@@ -46,7 +46,7 @@ export class MessagingService {
   async sendTextMessage(userId: string, dto: SendTextMessageDto) {
     await this.verifyMembershipOrThrow(dto.conversationId, userId);
 
-    const message = await this.messageRepository.createMessage({
+    const full = await this.messageRepository.createMessage({
       conversationId: dto.conversationId,
       senderId: userId,
       type: MessageType.TEXT,
@@ -54,8 +54,9 @@ export class MessagingService {
       replyToMessageId: dto.replyToMessageId,
     });
 
-    this.realtimePublisher.publishMessageCreated(message);
-    return message;
+    this.realtimePublisher.publishMessageCreated(full);
+    void this.conversationClient.touchConversationActivity(dto.conversationId);
+    return full;
   }
 
   async sendMediaMessage(userId: string, dto: SendMediaMessageDto) {
@@ -65,22 +66,36 @@ export class MessagingService {
       throw new BadRequestException('At least one mediaAssetId must be provided');
     }
 
+    const firstMeta = await this.messageRepository.findMediaAssetForMessageType(
+      dto.mediaAssetIds[0],
+    );
+    let msgType: MessageType = MessageType.IMAGE;
+    if (firstMeta?.mediaType === MediaType.AUDIO) {
+      msgType = MessageType.AUDIO;
+    } else if (firstMeta?.mediaType === MediaType.VIDEO) {
+      msgType = MessageType.VIDEO;
+    } else if (firstMeta?.mediaType === MediaType.DOCUMENT) {
+      msgType = MessageType.DOCUMENT;
+    }
+
     const message = await this.messageRepository.createMessage({
       conversationId: dto.conversationId,
       senderId: userId,
-      type: MessageType.IMAGE, // Defaulting to IMAGE; real app might introspect the mediaAsset
-      rawText: dto.caption, // Using text field for caption
+      type: msgType,
+      rawText: dto.caption,
       replyToMessageId: dto.replyToMessageId,
     });
 
-    // Attach all assets
-    for (let i = 0; i < dto.mediaAssetIds.length; i++) {
-       await this.messageRepository.attachMedia(message.id, dto.mediaAssetIds[i], i);
-    }
+    await Promise.all(
+      dto.mediaAssetIds.map((assetId, i) =>
+        this.messageRepository.attachMedia(message.id, assetId, i),
+      ),
+    );
 
     const fullMessage = await this.messageRepository.findMessageById(message.id);
-    this.realtimePublisher.publishMessageCreated(fullMessage);
-    return fullMessage;
+    this.realtimePublisher.publishMessageCreated(fullMessage!);
+    void this.conversationClient.touchConversationActivity(dto.conversationId);
+    return fullMessage!;
   }
 
   async forwardMessage(userId: string, messageId: string, targetConversationId: string) {
@@ -109,6 +124,7 @@ export class MessagingService {
 
     const fullMessage = await this.messageRepository.findMessageById(forwardedMessage.id);
     this.realtimePublisher.publishMessageCreated(fullMessage);
+    void this.conversationClient.touchConversationActivity(targetConversationId);
     return fullMessage;
   }
 

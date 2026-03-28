@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "unichat-backend-collection",
     "name": "Unichat Backend API",
-    "description": "Unichat backend APIs. **Public client / mobile base:** `{{gateway_base}}/api` (API Gateway, default port 4225). Web and mobile apps should use this host for: auth OTP, registration complete, user (find/create/update/deactivate), **conversations**, and **messages**. The gateway forwards to the respective microservices. Direct service ports (4226–4230, etc.) are for local debugging or service-to-service use.",
+    "description": "Unichat backend APIs. **Public client / mobile base:** `{{gateway_base}}/api` (API Gateway, default port 4225). Web and mobile apps should use this host for: auth OTP, registration complete, user (find/create/update/deactivate), **contact matching** (`POST /api/users/match-contacts`, JWT required), **conversations**, and **messages**. The gateway forwards to the respective microservices. Direct service ports (4226–4230, etc.) are for local debugging or service-to-service use.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "📌 API Gateway (4225)",
-      "description": "Public base URL: `{{gateway_base}}/api`. Clients (web/mobile) should use these routes for auth, registration, user lifecycle, conversations, and messages (same paths as downstream services, e.g. `GET /api/conversations`, `POST /api/messages/text`).",
+      "description": "Public base URL: `{{gateway_base}}/api`. Clients (web/mobile) should use these routes for auth, registration, user lifecycle, **contact discovery** (`POST /api/users/match-contacts` with `Authorization: Bearer` from OTP verify), conversations, and messages (same paths as downstream services, e.g. `GET /api/conversations`, `POST /api/messages/text`).",
       "item": [
         {
           "name": "OTP - Request",
@@ -324,6 +324,137 @@
           ]
         },
         {
+          "name": "Users - Match contacts (address book)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumbers\": [\n    \"+94771234567\",\n    \"+14155552671\"\n  ],\n  \"excludeSelf\": true\n}"
+            },
+            "url": {
+              "raw": "{{gateway_base}}/api/users/match-contacts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4225",
+              "path": ["api", "users", "match-contacts"]
+            },
+            "description": "Discover which E.164 numbers from the device address book belong to registered UniChat users. **Clients must request OS Contacts permission** and explain why (e.g. \"find people you know on UniChat\").\n\n**Auth:** `Authorization: Bearer <accessToken>` from `POST /api/auth/otp/verify` (`accessToken`). The gateway verifies JWT; responses must never reveal registered numbers to anonymous callers.\n\n**Request body:**\n- `phoneNumbers` (required): array of normalized E.164 strings. Before sending, strip spaces/dashes; the client should normalize to E.164 (country code included). Invalid entries or wrong shape → **400**.\n- `excludeSelf` (optional): when `true`, omits the signed-in user if their own number appears in the list.\n\n**Limits:** At most **1000** numbers per request (gateway + user-service).\n\n**Normalization:** Trimming and internal whitespace removal are applied server-side; invalid numbers are rejected.\n\n**Eligible match:** `status` ACTIVE, not soft-deleted (`deletedAt` null), `accountStatus` true, `profileCompleted` true. Users blocked by you or who blocked you are excluded. `profilePhoto` is omitted when the matched user disabled photo sharing in privacy settings.\n\n**Response:** `{ \"matches\": [ ... ] }` only for hits. Numbers with no eligible match are **omitted** (not listed as \"not found\") to reduce response size.\n\nEach match: `phoneNumber`, `userId` (same UUID as JWT `sub` for that user — use as `participantUserId` in `POST /api/conversations/private`), optional `displayName`, `username`, `profilePhoto`.\n\n**Errors:** **400** validation, **401** missing/invalid/expired token, **429** rate limited (best-effort per gateway instance; defaults ~30 requests / signed-in user / minute and ~120 / client IP / minute — tune with `CONTACT_MATCH_RATE_MAX`, `CONTACT_MATCH_RATE_MAX_PER_IP`, `CONTACT_MATCH_RATE_WINDOW_MS`).\n\n**Privacy:** Server logs only counts (batch size and match count), not the number list. This API does **not** accept hashed numbers; use plaintext E.164 over TLS with auth + rate limits.\n\n**Future:** A `discoverableByPhone` (or similar) privacy flag can further restrict matches without changing the URL."
+          },
+          "response": [
+            {
+              "name": "200 - matches",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumbers\": [\"+94771234567\", \"+14155552671\"],\n  \"excludeSelf\": true\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base}}/api/users/match-contacts",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "users", "match-contacts"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"matches\": [\n    {\n      \"phoneNumber\": \"+94771234567\",\n      \"userId\": \"550e8400-e29b-41d4-a716-446655440002\",\n      \"displayName\": \"kavi_perera\",\n      \"username\": \"kavi_perera\",\n      \"profilePhoto\": \"https://res.cloudinary.com/demo/image/upload/v1/unichat/profiles/user_kavi.jpg\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "400 - invalid number in batch",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumbers\": [\"+94771234567\", \"0771234567\"]\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base}}/api/users/match-contacts",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "users", "match-contacts"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": [\n    \"Each phone number must be E.164 (leading +, country code, 8–15 digits total after +)\"\n  ],\n  \"error\": \"Bad Request\"\n}"
+            },
+            {
+              "name": "401 - no token",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumbers\": [\"+94771234567\"]\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base}}/api/users/match-contacts",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "users", "match-contacts"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing or invalid Authorization header (expected Bearer token)\",\n  \"error\": \"Unauthorized\"\n}"
+            },
+            {
+              "name": "429 - rate limited",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumbers\": [\"+94771234567\"]\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base}}/api/users/match-contacts",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "4225",
+                  "path": ["api", "users", "match-contacts"]
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"statusCode\": 429,\n  \"message\": \"Too many contact match requests; try again later\"\n}"
+            }
+          ]
+        },
+        {
           "name": "User - Update",
           "request": {
             "method": "PUT",
@@ -462,6 +593,34 @@
               "port": "4225",
               "path": ["api", "user", "create"]
             }
+          }
+        },
+        {
+          "name": "Match contacts (internal — x-user-id)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{user_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumbers\": [\"+94771234567\"],\n  \"excludeSelf\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:4227/api/user/contacts/match",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4227",
+              "path": ["api", "user", "contacts", "match"]
+            },
+            "description": "user-service endpoint used by the gateway after JWT verification. **Do not expose publicly** without the same trust model. Prefer `POST {{gateway_base}}/api/users/match-contacts` with Bearer token from clients."
           }
         },
         {
@@ -1149,6 +1308,10 @@
     {
       "key": "gateway_base",
       "value": "http://localhost:4225"
+    },
+    {
+      "key": "access_token",
+      "value": ""
     },
     {
       "key": "base_url",

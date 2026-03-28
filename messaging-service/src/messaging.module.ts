@@ -4,6 +4,7 @@ import { MessagingService } from './messaging.service';
 import { MessageRepository } from './repositories/message.repository';
 import { ConversationClientService } from './integrations/conversation-client.service';
 import { RealtimePublisherService } from './integrations/realtime-publisher.service';
+import { ChatMediaService } from './chat-media.service';
 
 @Module({
   controllers: [MessagingController],
@@ -12,6 +13,7 @@ import { RealtimePublisherService } from './integrations/realtime-publisher.serv
     MessageRepository,
     ConversationClientService,
     RealtimePublisherService,
+    ChatMediaService,
   ],
   exports: [MessagingService]
 })
