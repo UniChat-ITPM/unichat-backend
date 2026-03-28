@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
 
@@ -166,6 +167,41 @@ export class ApiService {
       const reason =
         error instanceof Error ? error.message : 'user-service unreachable';
       this.logger.error(`Failed to forward find-by-phone: ${reason}`);
+      throw new InternalServerErrorException(
+        'Unable to reach user service. Please try again.',
+      );
+    }
+  }
+
+  async forwardMatchContacts(
+    requesterUserId: string,
+    payload: { phoneNumbers: string[]; excludeSelf?: boolean },
+  ) {
+    try {
+      const response = await axios.post(
+        `${this.userServiceBaseUrl}/user/contacts/match`,
+        payload,
+        { headers: { 'x-user-id': requesterUserId } },
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response) {
+        const status = error.response.status;
+        const message =
+          error.response.data?.message ?? 'Contact matching failed';
+
+        if (status === 400) throw new BadRequestException(message);
+        if (status === 401) throw new UnauthorizedException(message);
+
+        this.logger.error(
+          `user-service contacts/match responded with ${status}`,
+        );
+        throw new InternalServerErrorException(message);
+      }
+
+      const reason =
+        error instanceof Error ? error.message : 'user-service unreachable';
+      this.logger.error(`Failed to forward contact match: ${reason}`);
       throw new InternalServerErrorException(
         'Unable to reach user service. Please try again.',
       );

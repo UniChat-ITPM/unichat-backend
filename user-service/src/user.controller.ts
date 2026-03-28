@@ -4,6 +4,7 @@ import {
   ConflictException,
   Controller,
   Get,
+  Headers,
   HttpCode,
   InternalServerErrorException,
   NotFoundException,
@@ -11,12 +12,17 @@ import {
   Post,
   Put,
   Query,
+  UnauthorizedException,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { MatchContactsDto } from './dto/match-contacts.dto';
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import {
   CloudinaryUploadError,
   ImageValidationError,
@@ -25,6 +31,30 @@ import {
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  private getTrustedRequesterId(rawHeader: string | undefined): string {
+    const v = rawHeader?.trim();
+    if (!v) {
+      throw new UnauthorizedException('Missing x-user-id header');
+    }
+    if (!UUID_RE.test(v)) {
+      throw new BadRequestException(
+        'Invalid x-user-id format; expected a UUID',
+      );
+    }
+    return v;
+  }
+
+  @Post('contacts/match')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async matchContacts(
+    @Headers('x-user-id') xUserId: string | undefined,
+    @Body() dto: MatchContactsDto,
+  ) {
+    const requesterId = this.getTrustedRequesterId(xUserId);
+    return this.userService.matchContacts(requesterId, dto);
+  }
 
   @Get('find-by-phone')
   async findByPhone(@Query('phoneNumber') phoneNumber: string) {

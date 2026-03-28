@@ -14,6 +14,7 @@ import {
 } from './cloudinary.service';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { MatchContactsDto } from './dto/match-contacts.dto';
 
 const USER_SELECT = {
   id: true,
@@ -170,6 +171,114 @@ export class UserService implements OnModuleDestroy {
 
     this.logger.log(`User profile updated: ${updatedUser.id}`);
     return { success: true, user: updatedUser };
+  }
+
+  async matchContacts(
+    requesterId: string,
+    dto: MatchContactsDto,
+  ): Promise<{
+    matches: Array<{
+      phoneNumber: string;
+      userId: string;
+      displayName: string;
+      username?: string;
+      profilePhoto?: string;
+    }>;
+  }> {
+    const seen = new Set<string>();
+    const orderedUnique: string[] = [];
+    for (const p of dto.phoneNumbers) {
+      if (!seen.has(p)) {
+        seen.add(p);
+        orderedUnique.push(p);
+      }
+    }
+
+    if (orderedUnique.length === 0) {
+      return { matches: [] };
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        phoneNumber: { in: orderedUnique },
+        status: UserStatus.ACTIVE,
+        deletedAt: null,
+        accountStatus: true,
+        profileCompleted: true,
+      },
+      select: {
+        id: true,
+        phoneNumber: true,
+        displayName: true,
+        username: true,
+        avatarUrl: true,
+        privacySetting: { select: { allowProfilePhoto: true } },
+      },
+    });
+
+    const matchedIds = users.map((u) => u.id);
+    const blockedIds = new Set<string>();
+
+    if (matchedIds.length > 0) {
+      const blocks = await this.prisma.userBlock.findMany({
+        where: {
+          OR: [
+            { blockerUserId: requesterId, blockedUserId: { in: matchedIds } },
+            { blockedUserId: requesterId, blockerUserId: { in: matchedIds } },
+          ],
+        },
+        select: { blockerUserId: true, blockedUserId: true },
+      });
+
+      for (const b of blocks) {
+        blockedIds.add(
+          b.blockerUserId === requesterId ? b.blockedUserId : b.blockerUserId,
+        );
+      }
+    }
+
+    const byPhone = new Map(users.map((u) => [u.phoneNumber, u]));
+    const excludeSelf = dto.excludeSelf === true;
+    const matches: Array<{
+      phoneNumber: string;
+      userId: string;
+      displayName: string;
+      username?: string;
+      profilePhoto?: string;
+    }> = [];
+
+    for (const phone of orderedUnique) {
+      const u = byPhone.get(phone);
+      if (!u) {
+        continue;
+      }
+      if (blockedIds.has(u.id)) {
+        continue;
+      }
+      if (excludeSelf && u.id === requesterId) {
+        continue;
+      }
+
+      const allowPhoto = u.privacySetting?.allowProfilePhoto !== false;
+      const entry: (typeof matches)[number] = {
+        phoneNumber: phone,
+        userId: u.id,
+        displayName: u.displayName,
+      };
+      if (u.username) {
+        entry.username = u.username;
+      }
+      if (allowPhoto && u.avatarUrl) {
+        entry.profilePhoto = u.avatarUrl;
+      }
+      matches.push(entry);
+    }
+
+    this.logger.log(
+      `Contact match requester=${requesterId} batch=${orderedUnique.length} matches=${matches.length}`,
+    );
+
+    return { matches };
   }
 
   async deactivateUserById(

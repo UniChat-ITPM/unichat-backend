@@ -7,7 +7,10 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { loadWorkspaceEnv } from '../../workspace-env/load-env';
 import { AppModule } from './app/app.module';
+
+loadWorkspaceEnv();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -34,7 +37,7 @@ async function bootstrap() {
   );
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ limit: '2mb', extended: true }));
-  const port = process.env.PORT || 4225;
+  const port = Number(process.env['API_GATEWAY_PORT']) || 4225;
   await app.listen(port);
   app.getHttpServer().on('upgrade', socketIoProxy.upgrade);
   Logger.log(
