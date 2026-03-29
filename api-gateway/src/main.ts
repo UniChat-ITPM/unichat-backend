@@ -35,8 +35,9 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true }),
   );
-  app.use(express.json({ limit: '2mb' }));
-  app.use(express.urlencoded({ limit: '2mb', extended: true }));
+  // Large enough for profilePhoto as base64 (API allows up to 5 MB raw image).
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
   const port = Number(process.env['API_GATEWAY_PORT']) || 4225;
   await app.listen(port);
   app.getHttpServer().on('upgrade', socketIoProxy.upgrade);
