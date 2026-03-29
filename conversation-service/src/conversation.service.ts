@@ -225,6 +225,7 @@ export class ConversationService {
         myRole: p.role,
         isMuted: p.mutedUntil ? new Date(p.mutedUntil) > new Date() : false,
         isArchived: !!p.archivedAt,
+        unreadCount: p.unreadCount ?? 0,
       };
     });
 

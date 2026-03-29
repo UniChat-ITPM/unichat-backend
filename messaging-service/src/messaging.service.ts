@@ -54,6 +54,8 @@ export class MessagingService {
       replyToMessageId: dto.replyToMessageId,
     });
 
+    await this.messageRepository.incrementUnreadForRecipients(dto.conversationId, userId);
+
     this.realtimePublisher.publishMessageCreated(full);
     void this.conversationClient.touchConversationActivity(dto.conversationId);
     return full;
@@ -92,6 +94,8 @@ export class MessagingService {
       ),
     );
 
+    await this.messageRepository.incrementUnreadForRecipients(dto.conversationId, userId);
+
     const fullMessage = await this.messageRepository.findMessageById(message.id);
     this.realtimePublisher.publishMessageCreated(fullMessage!);
     void this.conversationClient.touchConversationActivity(dto.conversationId);
@@ -122,6 +126,8 @@ export class MessagingService {
       );
     }
 
+    await this.messageRepository.incrementUnreadForRecipients(targetConversationId, userId);
+
     const fullMessage = await this.messageRepository.findMessageById(forwardedMessage.id);
     this.realtimePublisher.publishMessageCreated(fullMessage);
     void this.conversationClient.touchConversationActivity(targetConversationId);
@@ -149,6 +155,13 @@ export class MessagingService {
      await this.verifyMembershipOrThrow(conversationId, userId);
      const count = await this.messageRepository.getUnreadCount(conversationId, userId);
      return { conversationId, unreadCount: count };
+  }
+
+  /** Call when the user opens the thread so the home list / badges drop to zero for this chat. */
+  async markConversationViewed(userId: string, conversationId: string) {
+    await this.verifyMembershipOrThrow(conversationId, userId);
+    await this.messageRepository.clearUnreadForParticipant(conversationId, userId);
+    return { success: true, conversationId };
   }
 
   // ─── Status Updates ────────────────────────────────────────────────
