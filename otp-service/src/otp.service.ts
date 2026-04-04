@@ -179,8 +179,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         const backoffMs = Math.min(60_000, 800 * 2 ** retryCount);
 
         const timer = setTimeout(() => {
-          void this.rabbitChannel
-            ?.sendToQueue(
+          try {
+            this.rabbitChannel?.sendToQueue(
               this.otpSendQueue,
               Buffer.from(
                 JSON.stringify({
@@ -192,13 +192,12 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
                 persistent: true,
                 headers: { 'x-retry-count': nextRetry },
               },
-            )
-            .catch(() => {
-              // swallow republish errors; a new request will eventually create another job
-            })
-            .finally(() => {
-              this.scheduledRetryTimers.delete(timer);
-            });
+            );
+          } catch {
+            // swallow republish errors; a new request will eventually create another job
+          } finally {
+            this.scheduledRetryTimers.delete(timer);
+          }
         }, backoffMs);
 
         this.scheduledRetryTimers.add(timer);

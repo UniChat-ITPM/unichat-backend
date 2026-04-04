@@ -10,13 +10,22 @@ import {
   Headers,
   UnauthorizedException,
   BadRequestException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MessagingService } from './messaging.service';
+import { ChatMediaService } from './chat-media.service';
 import { SendTextMessageDto, SendMediaMessageDto, EditMessageDto, MessagePaginationDto } from './dto/message.dto';
+
+const UPLOAD_LIMIT = 25 * 1024 * 1024;
 
 @Controller('messages')
 export class MessagingController {
-  constructor(private readonly messagingService: MessagingService) {}
+  constructor(
+    private readonly messagingService: MessagingService,
+    private readonly chatMediaService: ChatMediaService,
+  ) {}
 
   // ─── Helper ────────────────────────────────────────────────────────
 
@@ -49,6 +58,22 @@ export class MessagingController {
     return this.messagingService.sendMediaMessage(this.getUserId(xUserId), dto);
   }
 
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: UPLOAD_LIMIT },
+    }),
+  )
+  async uploadChatMedia(
+    @Headers('x-user-id') xUserId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) {
+      throw new BadRequestException('file is required (multipart field name: file)');
+    }
+    return this.chatMediaService.uploadForUser(this.getUserId(xUserId), file);
+  }
+
   @Post(':id/forward')
   async forwardMessage(
     @Headers('x-user-id') xUserId: string,
@@ -79,6 +104,14 @@ export class MessagingController {
     @Param('conversationId') conversationId: string,
   ) {
     return this.messagingService.getUnreadCount(this.getUserId(xUserId), conversationId);
+  }
+
+  @Patch('conversation/:conversationId/viewed')
+  async markConversationViewed(
+    @Headers('x-user-id') xUserId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
+    return this.messagingService.markConversationViewed(this.getUserId(xUserId), conversationId);
   }
 
   @Get(':id')
