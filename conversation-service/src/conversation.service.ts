@@ -178,12 +178,56 @@ export class ConversationService {
   async getUserConversations(userId: string) {
     const participantRecords = await this.repo.findUserConversations(userId);
 
-    const conversations = participantRecords.map((p) => ({
-      ...p.conversation,
-      myRole: p.role,
-      isMuted: p.mutedUntil ? new Date(p.mutedUntil) > new Date() : false,
-      isArchived: !!p.archivedAt,
-    }));
+    const conversations = participantRecords.map((p) => {
+      const c = p.conversation;
+      const lastMsg = c.messages?.[0];
+      let lastMessageText =
+        (lastMsg?.rawText ?? lastMsg?.caption ?? '').trim() || null;
+      if (!lastMessageText && lastMsg?.type) {
+        const t = lastMsg.type;
+        if (t === 'IMAGE' || t === 'STICKER') {
+          lastMessageText = '📷 Photo';
+        } else if (t === 'VIDEO') {
+          lastMessageText = '🎥 Video';
+        } else if (t === 'AUDIO') {
+          lastMessageText = '🎤 Voice message';
+        } else if (t === 'DOCUMENT') {
+          lastMessageText = '📎 File';
+        }
+      }
+      const participantRows = c.participants ?? [];
+      const participants = participantRows.map((x) => ({
+        userId: x.userId,
+        displayName: x.user?.displayName ?? null,
+        username: x.user?.username ?? null,
+        profilePhoto: x.user?.avatarUrl ?? null,
+      }));
+      let peerDisplayName: string | null = null;
+      let peerUsername: string | null = null;
+      let peerUserId: string | null = null;
+      if (c.type === ConversationType.DIRECT && participants.length === 2) {
+        const other = participants.find((x) => x.userId !== userId);
+        if (other) {
+          peerUserId = other.userId;
+          peerDisplayName =
+            other.displayName?.trim() || other.username?.trim() || null;
+          peerUsername = other.username?.trim() ?? null;
+        }
+      }
+      const { messages: _m, participants: _pr, ...convRest } = c;
+      return {
+        ...convRest,
+        participants,
+        peerDisplayName,
+        peerUsername,
+        peerUserId,
+        lastMessageText,
+        myRole: p.role,
+        isMuted: p.mutedUntil ? new Date(p.mutedUntil) > new Date() : false,
+        isArchived: !!p.archivedAt,
+        unreadCount: p.unreadCount ?? 0,
+      };
+    });
 
     return { success: true, conversations };
   }

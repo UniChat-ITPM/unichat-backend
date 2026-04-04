@@ -3,6 +3,8 @@ import { PrismaClient, OtpChannel, OtpPurpose, OtpStatus } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createHash, randomInt } from 'crypto';
 import axios from 'axios';
+import * as jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService implements OnModuleDestroy {
@@ -71,12 +73,18 @@ export class AuthService implements OnModuleDestroy {
     | {
         success: true;
         message: string;
+        accessToken: string;
         isNewUser: boolean;
+        requiresProfileCompletion: boolean;
         user: {
           id: string;
           phoneNumber: string;
           displayName: string;
           username?: string | null;
+          email?: string | null;
+          avatarUrl?: string | null;
+          profilePhoto?: string | null;
+          profileCompleted?: boolean;
         };
       }
     | { success: false; message: string }
@@ -148,6 +156,10 @@ export class AuthService implements OnModuleDestroy {
       phoneNumber: string;
       displayName: string;
       username?: string | null;
+      email?: string | null;
+      avatarUrl?: string | null;
+      profilePhoto?: string | null;
+      profileCompleted?: boolean;
     };
 
     try {
@@ -157,13 +169,11 @@ export class AuthService implements OnModuleDestroy {
       );
 
       if (findResponse.data?.found) {
-        // Existing user → return display name
         user = findResponse.data.user;
         this.logger.log(
           `Existing user found for ${normalizedPhone}: ${user.displayName}`,
         );
       } else {
-        // New user → request user-service to create
         const createResponse = await axios.post(
           `${this.userServiceBaseUrl}/user/create`,
           { phoneNumber: normalizedPhone },
@@ -182,13 +192,22 @@ export class AuthService implements OnModuleDestroy {
       };
     }
 
+    const requiresProfileCompletion = !user.profileCompleted;
+    const responseUser = {
+      ...user,
+      // Keep backward compatibility while exposing the expected field name.
+      profilePhoto: user.avatarUrl ?? null,
+    };
+
     return {
       success: true,
       message: isNewUser
         ? 'Login success. Welcome to UniChat!'
         : `Login success. Welcome back, ${user.displayName}!`,
+      accessToken: this.signAccessToken(user.id),
       isNewUser,
-      user,
+      requiresProfileCompletion,
+      user: responseUser,
     };
   }
 
@@ -197,6 +216,27 @@ export class AuthService implements OnModuleDestroy {
   }
 
   // ─── Private helpers ───────────────────────────────────────────────
+
+  private getJwtSecret(): string {
+    const secret = process.env['JWT_SECRET'];
+    if (secret) {
+      return secret;
+    }
+    if (process.env['NODE_ENV'] === 'production') {
+      throw new Error('JWT_SECRET is required in production');
+    }
+    return 'unichat-dev-jwt-secret-change-me';
+  }
+
+  private signAccessToken(userId: string): string {
+    return jwt.sign(
+      { sub: userId },
+      this.getJwtSecret(),
+      {
+        expiresIn: process.env['JWT_EXPIRES_IN'] ?? '7d',
+      } as SignOptions,
+    );
+  }
 
   private normalizeAndValidatePhone(phoneNumber: string): string {
     const normalized = phoneNumber.trim().replace(/\s+/g, '');

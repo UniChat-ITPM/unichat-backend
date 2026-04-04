@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import {
+  Prisma,
   PrismaClient,
   ConversationType,
   ConversationStatus,
@@ -9,6 +10,39 @@ import {
   GroupJoinApprovalMode,
   GroupMemberAddMode,
 } from '@prisma/client';
+
+/** Include graph for `findUserConversations` — keeps `conversation` on participant rows typed. */
+const USER_CONVERSATIONS_INCLUDE = {
+  conversation: {
+    include: {
+      participants: {
+        where: { status: ParticipantStatus.ACTIVE },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
+      groupDetail: true,
+      messages: {
+        where: { isDeleted: false },
+        orderBy: { sentAt: 'desc' as const },
+        take: 1,
+        select: { rawText: true, caption: true, type: true, sentAt: true },
+      },
+    },
+  },
+} satisfies Prisma.ConversationParticipantInclude;
+
+export type UserConversationParticipantRow =
+  Prisma.ConversationParticipantGetPayload<{
+    include: typeof USER_CONVERSATIONS_INCLUDE;
+  }>;
 
 @Injectable()
 export class ConversationRepository implements OnModuleDestroy {
@@ -175,29 +209,15 @@ export class ConversationRepository implements OnModuleDestroy {
 
   // ─── User conversations ────────────────────────────────────────────
 
-  async findUserConversations(userId: string) {
+  async findUserConversations(
+    userId: string,
+  ): Promise<UserConversationParticipantRow[]> {
     return this.prisma.conversationParticipant.findMany({
       where: {
         userId,
         status: ParticipantStatus.ACTIVE,
       },
-      include: {
-        conversation: {
-          include: {
-            participants: {
-              where: { status: ParticipantStatus.ACTIVE },
-              select: {
-                id: true,
-                userId: true,
-                role: true,
-                status: true,
-                joinedAt: true,
-              },
-            },
-            groupDetail: true,
-          },
-        },
-      },
+      include: USER_CONVERSATIONS_INCLUDE,
       orderBy: { conversation: { updatedAt: 'desc' } },
     });
   }
