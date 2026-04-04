@@ -4,6 +4,7 @@ import {
   PrismaClient,
   MessageStatus,
   MessageType,
+  ParticipantStatus,
   Prisma,
 } from '@prisma/client';
 
@@ -233,6 +234,27 @@ export class MessageRepository implements OnModuleDestroy {
       select: { unreadCount: true },
     });
     return participant?.unreadCount || 0;
+  }
+
+  /** Bump unread for every active participant except the sender (new incoming message). */
+  async incrementUnreadForRecipients(conversationId: string, senderId: string) {
+    return this.prisma.conversationParticipant.updateMany({
+      where: {
+        conversationId,
+        userId: { not: senderId },
+        status: ParticipantStatus.ACTIVE,
+      },
+      data: { unreadCount: { increment: 1 } },
+    });
+  }
+
+  async clearUnreadForParticipant(conversationId: string, userId: string) {
+    return this.prisma.conversationParticipant.update({
+      where: {
+        conversationId_userId: { conversationId, userId },
+      },
+      data: { unreadCount: 0 },
+    });
   }
 
   async onModuleDestroy() {

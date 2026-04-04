@@ -106,6 +106,14 @@ export class MessagingController {
     return this.messagingService.getUnreadCount(this.getUserId(xUserId), conversationId);
   }
 
+  @Patch('conversation/:conversationId/viewed')
+  async markConversationViewed(
+    @Headers('x-user-id') xUserId: string,
+    @Param('conversationId') conversationId: string,
+  ) {
+    return this.messagingService.markConversationViewed(this.getUserId(xUserId), conversationId);
+  }
+
   @Get(':id')
   async getMessageById(
     @Headers('x-user-id') xUserId: string,
