@@ -4,6 +4,7 @@ import {
   PrismaClient,
   MessageStatus,
   MessageType,
+  ParticipantStatus,
   Prisma,
 } from '@prisma/client';
 
@@ -24,6 +25,17 @@ export class MessageRepository implements OnModuleDestroy {
 
   // ─── Message CRUD ──────────────────────────────────────────────
 
+  replyToInclude() {
+    return {
+      select: {
+        id: true,
+        rawText: true,
+        senderId: true,
+        sender: { select: { displayName: true } },
+      },
+    };
+  }
+
   async createMessage(data: {
     conversationId: string;
     senderId: string;
@@ -42,6 +54,16 @@ export class MessageRepository implements OnModuleDestroy {
         replyToMessageId: data.replyToMessageId,
         status: MessageStatus.SENT,
       },
+      include: {
+        replyTo: this.replyToInclude(),
+      },
+    });
+  }
+
+  async findMediaAssetForMessageType(id: string) {
+    return this.prisma.mediaAsset.findUnique({
+      where: { id },
+      select: { id: true, mediaType: true },
     });
   }
 
@@ -62,6 +84,7 @@ export class MessageRepository implements OnModuleDestroy {
         attachments: {
           include: { mediaAsset: true },
         },
+        replyTo: this.replyToInclude(),
       },
     });
   }
@@ -71,17 +94,19 @@ export class MessageRepository implements OnModuleDestroy {
     limit: number = 50,
     cursor?: string,
   ) {
+    const lim = Math.max(1, Math.floor(Number(limit)) || 50);
     const args: Prisma.MessageFindManyArgs = {
       where: {
         conversationId,
         isDeleted: false,
       },
-      take: limit + 1, // take an extra item to determine if there's a next page
+      take: lim + 1, // take an extra item to determine if there's a next page
       orderBy: { sentAt: 'desc' },
       include: {
         attachments: {
           include: { mediaAsset: true },
         },
+        replyTo: this.replyToInclude(),
       },
     };
 
@@ -94,7 +119,7 @@ export class MessageRepository implements OnModuleDestroy {
     const messages = await this.prisma.message.findMany(args);
 
     let nextCursor: typeof cursor | undefined = undefined;
-    if (messages.length > limit) {
+    if (messages.length > lim) {
       const nextItem = messages.pop();
       nextCursor = nextItem?.id;
     }
@@ -209,6 +234,27 @@ export class MessageRepository implements OnModuleDestroy {
       select: { unreadCount: true },
     });
     return participant?.unreadCount || 0;
+  }
+
+  /** Bump unread for every active participant except the sender (new incoming message). */
+  async incrementUnreadForRecipients(conversationId: string, senderId: string) {
+    return this.prisma.conversationParticipant.updateMany({
+      where: {
+        conversationId,
+        userId: { not: senderId },
+        status: ParticipantStatus.ACTIVE,
+      },
+      data: { unreadCount: { increment: 1 } },
+    });
+  }
+
+  async clearUnreadForParticipant(conversationId: string, userId: string) {
+    return this.prisma.conversationParticipant.update({
+      where: {
+        conversationId_userId: { conversationId, userId },
+      },
+      data: { unreadCount: 0 },
+    });
   }
 
   async onModuleDestroy() {

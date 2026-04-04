@@ -1,9 +1,29 @@
 import { Module } from '@nestjs/common';
 import { ApiController } from './api.controller';
 import { ApiService } from './api.service';
+import { BackendProxyService } from './backend-proxy.service';
+import { ConversationsProxyController } from './conversations-proxy.controller';
+import { MessagingProxyController } from './messaging-proxy.controller';
+import { RealtimeProxyController } from './realtime-proxy.controller';
+import { UserApiController } from './user-api.controller';
+import { UsersMatchContactsController } from './users-match-contacts.controller';
+import { JwtBearerUserService } from './jwt-bearer-user.service';
+import { ContactMatchRateLimiterService } from './contact-match-rate-limiter.service';
 
 @Module({
-  controllers: [ApiController],
-  providers: [ApiService],
+  controllers: [
+    ApiController,
+    UserApiController,
+    UsersMatchContactsController,
+    ConversationsProxyController,
+    MessagingProxyController,
+    RealtimeProxyController,
+  ],
+  providers: [
+    ApiService,
+    BackendProxyService,
+    JwtBearerUserService,
+    ContactMatchRateLimiterService,
+  ],
 })
 export class ApiModule {}

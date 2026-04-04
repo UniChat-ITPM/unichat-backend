@@ -1,4 +1,9 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
 @Controller('realtime')
-export class RealtimeController {}
+export class RealtimeController {
+  @Get('health')
+  health() {
+    return { ok: true };
+  }
+}

@@ -7,7 +7,7 @@ import {
 import { MessageRepository } from './repositories/message.repository';
 import { ConversationClientService } from './integrations/conversation-client.service';
 import { RealtimePublisherService } from './integrations/realtime-publisher.service';
-import { MessageType, MessageStatus } from '@prisma/client';
+import { MessageType, MessageStatus, MediaType } from '@prisma/client';
 import {
   SendTextMessageDto,
   SendMediaMessageDto,
@@ -46,7 +46,7 @@ export class MessagingService {
   async sendTextMessage(userId: string, dto: SendTextMessageDto) {
     await this.verifyMembershipOrThrow(dto.conversationId, userId);
 
-    const message = await this.messageRepository.createMessage({
+    const full = await this.messageRepository.createMessage({
       conversationId: dto.conversationId,
       senderId: userId,
       type: MessageType.TEXT,
@@ -54,8 +54,11 @@ export class MessagingService {
       replyToMessageId: dto.replyToMessageId,
     });
 
-    this.realtimePublisher.publishMessageCreated(message);
-    return message;
+    await this.messageRepository.incrementUnreadForRecipients(dto.conversationId, userId);
+
+    this.realtimePublisher.publishMessageCreated(full);
+    void this.conversationClient.touchConversationActivity(dto.conversationId);
+    return full;
   }
 
   async sendMediaMessage(userId: string, dto: SendMediaMessageDto) {
@@ -65,22 +68,38 @@ export class MessagingService {
       throw new BadRequestException('At least one mediaAssetId must be provided');
     }
 
+    const firstMeta = await this.messageRepository.findMediaAssetForMessageType(
+      dto.mediaAssetIds[0],
+    );
+    let msgType: MessageType = MessageType.IMAGE;
+    if (firstMeta?.mediaType === MediaType.AUDIO) {
+      msgType = MessageType.AUDIO;
+    } else if (firstMeta?.mediaType === MediaType.VIDEO) {
+      msgType = MessageType.VIDEO;
+    } else if (firstMeta?.mediaType === MediaType.DOCUMENT) {
+      msgType = MessageType.DOCUMENT;
+    }
+
     const message = await this.messageRepository.createMessage({
       conversationId: dto.conversationId,
       senderId: userId,
-      type: MessageType.IMAGE, // Defaulting to IMAGE; real app might introspect the mediaAsset
-      rawText: dto.caption, // Using text field for caption
+      type: msgType,
+      rawText: dto.caption,
       replyToMessageId: dto.replyToMessageId,
     });
 
-    // Attach all assets
-    for (let i = 0; i < dto.mediaAssetIds.length; i++) {
-       await this.messageRepository.attachMedia(message.id, dto.mediaAssetIds[i], i);
-    }
+    await Promise.all(
+      dto.mediaAssetIds.map((assetId, i) =>
+        this.messageRepository.attachMedia(message.id, assetId, i),
+      ),
+    );
+
+    await this.messageRepository.incrementUnreadForRecipients(dto.conversationId, userId);
 
     const fullMessage = await this.messageRepository.findMessageById(message.id);
-    this.realtimePublisher.publishMessageCreated(fullMessage);
-    return fullMessage;
+    this.realtimePublisher.publishMessageCreated(fullMessage!);
+    void this.conversationClient.touchConversationActivity(dto.conversationId);
+    return fullMessage!;
   }
 
   async forwardMessage(userId: string, messageId: string, targetConversationId: string) {
@@ -107,8 +126,11 @@ export class MessagingService {
       );
     }
 
+    await this.messageRepository.incrementUnreadForRecipients(targetConversationId, userId);
+
     const fullMessage = await this.messageRepository.findMessageById(forwardedMessage.id);
     this.realtimePublisher.publishMessageCreated(fullMessage);
+    void this.conversationClient.touchConversationActivity(targetConversationId);
     return fullMessage;
   }
 
@@ -135,6 +157,13 @@ export class MessagingService {
      return { conversationId, unreadCount: count };
   }
 
+  /** Call when the user opens the thread so the home list / badges drop to zero for this chat. */
+  async markConversationViewed(userId: string, conversationId: string) {
+    await this.verifyMembershipOrThrow(conversationId, userId);
+    await this.messageRepository.clearUnreadForParticipant(conversationId, userId);
+    return { success: true, conversationId };
+  }
+
   // ─── Status Updates ────────────────────────────────────────────────
 
   async markAsDelivered(userId: string, messageId: string) {
@@ -145,7 +174,11 @@ export class MessagingService {
     // If it's recipient marking it:
     if (msg.senderId !== userId && msg.status === MessageStatus.SENT) {
       await this.messageRepository.updateMessageStatus(messageId, MessageStatus.DELIVERED);
-      this.realtimePublisher.publishMessageStatusUpdated({ messageId, status: MessageStatus.DELIVERED });
+      this.realtimePublisher.publishMessageStatusUpdated({
+        conversationId: msg.conversationId,
+        messageId,
+        status: MessageStatus.DELIVERED,
+      });
     }
 
     return { success: true };
@@ -157,7 +190,11 @@ export class MessagingService {
 
     if (msg.senderId !== userId && (msg.status === MessageStatus.SENT || msg.status === MessageStatus.DELIVERED)) {
       await this.messageRepository.updateMessageStatus(messageId, MessageStatus.READ);
-      this.realtimePublisher.publishMessageStatusUpdated({ messageId, status: MessageStatus.READ });
+      this.realtimePublisher.publishMessageStatusUpdated({
+        conversationId: msg.conversationId,
+        messageId,
+        status: MessageStatus.READ,
+      });
     }
 
     return { success: true };
@@ -176,7 +213,11 @@ export class MessagingService {
       newText
     );
 
-    this.realtimePublisher.publishMessageEdited({ messageId: updated.id, newText });
+    this.realtimePublisher.publishMessageEdited({
+      conversationId: message.conversationId,
+      messageId: updated.id,
+      newText,
+    });
     return updated;
   }
 
@@ -184,7 +225,10 @@ export class MessagingService {
     const message = await this.fetchOwnMessageOrThrow(messageId, userId);
 
     await this.messageRepository.softDeleteMessage(messageId);
-    this.realtimePublisher.publishMessageDeleted({ messageId });
+    this.realtimePublisher.publishMessageDeleted({
+      conversationId: message.conversationId,
+      messageId,
+    });
 
     return { success: true, message: 'Message deleted' };
   }
