@@ -96,14 +96,15 @@ export class ConversationRepository implements OnModuleDestroy {
       include: {
         participants: {
           where: { status: ParticipantStatus.ACTIVE },
-          select: {
-            id: true,
-            userId: true,
-            role: true,
-            status: true,
-            joinedAt: true,
-            mutedUntil: true,
-            archivedAt: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                displayName: true,
+                username: true,
+                avatarUrl: true,
+              },
+            },
           },
         },
         groupDetail: true,

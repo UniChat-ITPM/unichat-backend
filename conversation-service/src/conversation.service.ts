@@ -4,6 +4,7 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ConversationType,
@@ -11,6 +12,11 @@ import {
   ParticipantStatus,
 } from '@prisma/client';
 import { ConversationRepository } from './repositories/conversation.repository';
+import {
+  CloudinaryService,
+  ImageValidationError,
+  CloudinaryUploadError,
+} from './cloudinary.service';
 import {
   CreatePrivateConversationBody,
   CreateGroupConversationBody,
@@ -24,7 +30,10 @@ import {
 export class ConversationService {
   private readonly logger = new Logger(ConversationService.name);
 
-  constructor(private readonly repo: ConversationRepository) {}
+  constructor(
+    private readonly repo: ConversationRepository,
+    private readonly cloudinaryService: CloudinaryService,
+  ) { }
 
   // ─── UUID Validation Helper ────────────────────────────────────────
 
@@ -140,10 +149,15 @@ export class ConversationService {
     const allUserIds = [userId, ...(participantUserIds ?? []).filter((id) => id !== userId)];
     await this.assertUsersExist(allUserIds);
 
+    let finalImageUrl = imageUrl;
+    if (imageUrl && (imageUrl.startsWith('data:image') || !imageUrl.startsWith('http'))) {
+      finalImageUrl = await this.uploadPhoto(imageUrl, 'new');
+    }
+
     const conversation = await this.repo.createConversation({
       type: ConversationType.GROUP,
       title: title.trim(),
-      imageUrl,
+      imageUrl: finalImageUrl,
       createdByUserId: userId,
     });
 
@@ -492,12 +506,17 @@ export class ConversationService {
 
     const { title, description, imageUrl, ...groupSettings } = body;
 
+    let finalImageUrl = imageUrl;
+    if (imageUrl && (imageUrl.startsWith('data:image') || !imageUrl.startsWith('http'))) {
+      finalImageUrl = await this.uploadPhoto(imageUrl, conversationId);
+    }
+
     // Update conversation-level metadata
-    if (title !== undefined || description !== undefined || imageUrl !== undefined) {
+    if (title !== undefined || description !== undefined || finalImageUrl !== undefined) {
       await this.repo.updateConversation(conversationId, {
         ...(title !== undefined && { title: title.trim() }),
         ...(description !== undefined && { description }),
-        ...(imageUrl !== undefined && { imageUrl }),
+        ...(finalImageUrl !== undefined && { imageUrl: finalImageUrl }),
       });
     }
 
@@ -594,6 +613,27 @@ export class ConversationService {
   private assertGroupConversation(conversation: { type: ConversationType }) {
     if (conversation.type !== ConversationType.GROUP) {
       throw new BadRequestException('This action is only available for group conversations');
+    }
+  }
+
+  private async uploadPhoto(
+    base64: string,
+    conversationId: string,
+  ): Promise<string> {
+    try {
+      const result = await this.cloudinaryService.uploadGroupPhoto(
+        base64,
+        conversationId,
+      );
+      return result.secureUrl;
+    } catch (error) {
+      if (error instanceof ImageValidationError) {
+        throw new BadRequestException(error.message);
+      }
+      if (error instanceof CloudinaryUploadError) {
+        throw new InternalServerErrorException(error.message);
+      }
+      throw new InternalServerErrorException('Unexpected error during photo upload');
     }
   }
 }

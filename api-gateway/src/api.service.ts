@@ -22,10 +22,14 @@ export class ApiService {
   private readonly userServiceBaseUrl =
     process.env['USER_SERVICE_URL'] ?? 'http://localhost:4227/api';
 
+  /** Longer than typical mobile timeout so the gateway can return an error body instead of hanging. */
+  private static readonly otpUpstreamTimeoutMs = 55_000;
+
   async forwardOtpRequest(payload: { phoneNumber: string }) {
     const response = await axios.post(
       `${this.otpServiceBaseUrl}/otp/request`,
       payload,
+      { timeout: ApiService.otpUpstreamTimeoutMs },
     );
     return response.data;
   }
@@ -34,6 +38,7 @@ export class ApiService {
     const response = await axios.post(
       `${this.authServiceBaseUrl}/auth/otp/verify`,
       payload,
+      { timeout: ApiService.otpUpstreamTimeoutMs },
     );
     return response.data;
   }
