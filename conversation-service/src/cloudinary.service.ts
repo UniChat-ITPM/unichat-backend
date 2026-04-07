@@ -17,7 +17,7 @@ const ALLOWED_MIME_TYPES = [
   'image/gif',
 ];
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB (group image uploads via base64 JSON)
 
 @Injectable()
 export class CloudinaryService {
