@@ -27,9 +27,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/otp/request",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "otp", "request"]
+              "path": [
+                "api",
+                "auth",
+                "otp",
+                "request"
+              ]
             }
           }
         },
@@ -50,9 +57,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/otp/verify",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "otp", "verify"]
+              "path": [
+                "api",
+                "auth",
+                "otp",
+                "verify"
+              ]
             },
             "description": "Verify OTP and log in. Response includes `requiresProfileCompletion` flag. If true, call Register Complete next."
           },
@@ -62,7 +76,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -71,16 +88,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/otp/verify",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "otp", "verify"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "otp",
+                    "verify"
+                  ]
                 }
               },
               "status": "OK",
               "code": 201,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"success\": true,\n  \"message\": \"Login success. Welcome to UniChat!\",\n  \"isNewUser\": true,\n  \"requiresProfileCompletion\": true,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"+1234567890\",\n    \"username\": null,\n    \"email\": null,\n    \"avatarUrl\": null,\n    \"profileCompleted\": false,\n    \"status\": \"ACTIVE\"\n  }\n}"
             },
@@ -89,7 +116,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -98,16 +128,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/otp/verify",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "otp", "verify"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "otp",
+                    "verify"
+                  ]
                 }
               },
               "status": "OK",
               "code": 201,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"success\": true,\n  \"message\": \"Login success. Welcome back, john_doe!\",\n  \"isNewUser\": false,\n  \"requiresProfileCompletion\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             }
@@ -130,9 +170,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/register/complete",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "register", "complete"]
+              "path": [
+                "api",
+                "auth",
+                "register",
+                "complete"
+              ]
             },
             "description": "Complete user registration after OTP verify. Send JSON body with optional base64 profilePhoto.\n\nValidation rules:\n- phoneNumber: E.164 format (e.g. +94771234567)\n- username: 3-50 chars, alphanumeric + underscore only, must be unique\n- email: valid email, must be unique\n- profilePhoto: optional, base64 string or data-URI (image/jpeg, image/png, image/webp, image/gif, max 5 MB)\n\nBehavior:\n- If profile already completed: returns existing user (200)\n- If user exists but incomplete: updates and returns (200)\n- If user does not exist: creates new user (200)\n\nErrors:\n- 400: validation failure or invalid image\n- 409: username or email already taken\n- 500: Cloudinary upload failure"
           },
@@ -142,7 +189,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -151,16 +201,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "register", "complete"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "register",
+                    "complete"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             },
@@ -169,7 +229,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -178,16 +241,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "register", "complete"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "register",
+                    "complete"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/unichat/profiles/user_123.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             },
@@ -196,7 +269,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -205,16 +281,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "register", "complete"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "register",
+                    "complete"
+                  ]
                 }
               },
               "status": "Conflict",
               "code": 409,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Username is already taken\",\n  \"error\": \"Conflict\"\n}"
             },
@@ -223,7 +309,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -232,16 +321,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "register", "complete"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "register",
+                    "complete"
+                  ]
                 }
               },
               "status": "Bad Request",
               "code": 400,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"statusCode\": 400,\n  \"message\": [\n    \"Phone number must be in E.164 format, e.g. +94771234567\",\n    \"Username must be at least 3 characters\",\n    \"Email must be a valid email address\"\n  ],\n  \"error\": \"Bad Request\"\n}"
             }
@@ -284,9 +383,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/register/complete",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "register", "complete"]
+              "path": [
+                "api",
+                "auth",
+                "register",
+                "complete"
+              ]
             },
             "description": "Complete user registration with file upload via multipart/form-data. Same behavior as the JSON variant, but the profile photo is sent as a file instead of base64.\n\nThe gateway converts the uploaded file to base64 before forwarding to user-service internally."
           },
@@ -299,25 +405,51 @@
                 "body": {
                   "mode": "formdata",
                   "formdata": [
-                    { "key": "phoneNumber", "value": "+1234567890", "type": "text" },
-                    { "key": "username", "value": "john_doe", "type": "text" },
-                    { "key": "email", "value": "john@example.com", "type": "text" },
-                    { "key": "profilePhoto", "type": "file", "src": "avatar.png" }
+                    {
+                      "key": "phoneNumber",
+                      "value": "+1234567890",
+                      "type": "text"
+                    },
+                    {
+                      "key": "username",
+                      "value": "john_doe",
+                      "type": "text"
+                    },
+                    {
+                      "key": "email",
+                      "value": "john@example.com",
+                      "type": "text"
+                    },
+                    {
+                      "key": "profilePhoto",
+                      "type": "file",
+                      "src": "avatar.png"
+                    }
                   ]
                 },
                 "url": {
                   "raw": "{{gateway_base}}/api/auth/register/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "auth", "register", "complete"]
+                  "path": [
+                    "api",
+                    "auth",
+                    "register",
+                    "complete"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": \"https://res.cloudinary.com/demo/image/upload/v1/unichat/profiles/user_550e8400_1711468800000.jpg\",\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             }
@@ -344,9 +476,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/users/match-contacts",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "users", "match-contacts"]
+              "path": [
+                "api",
+                "users",
+                "match-contacts"
+              ]
             },
             "description": "Discover which E.164 numbers from the device address book belong to registered UniChat users. **Clients must request OS Contacts permission** and explain why (e.g. \"find people you know on UniChat\").\n\n**Auth:** `Authorization: Bearer <accessToken>` from `POST /api/auth/otp/verify` (`accessToken`). The gateway verifies JWT; responses must never reveal registered numbers to anonymous callers.\n\n**Request body:**\n- `phoneNumbers` (required): array of normalized E.164 strings. Before sending, strip spaces/dashes; the client should normalize to E.164 (country code included). Invalid entries or wrong shape → **400**.\n- `excludeSelf` (optional): when `true`, omits the signed-in user if their own number appears in the list.\n\n**Limits:** At most **1000** numbers per request (gateway + user-service).\n\n**Normalization:** Trimming and internal whitespace removal are applied server-side; invalid numbers are rejected.\n\n**Eligible match:** `status` ACTIVE, not soft-deleted (`deletedAt` null), `accountStatus` true, `profileCompleted` true. Users blocked by you or who blocked you are excluded. `profilePhoto` is omitted when the matched user disabled photo sharing in privacy settings.\n\n**Response:** `{ \"matches\": [ ... ] }` only for hits. Numbers with no eligible match are **omitted** (not listed as \"not found\") to reduce response size.\n\nEach match: `phoneNumber`, `userId` (same UUID as JWT `sub` for that user — use as `participantUserId` in `POST /api/conversations/private`), optional `displayName`, `username`, `profilePhoto`.\n\n**Errors:** **400** validation, **401** missing/invalid/expired token, **429** rate limited (best-effort per gateway instance; defaults ~30 requests / signed-in user / minute and ~120 / client IP / minute — tune with `CONTACT_MATCH_RATE_MAX`, `CONTACT_MATCH_RATE_MAX_PER_IP`, `CONTACT_MATCH_RATE_WINDOW_MS`).\n\n**Privacy:** Server logs only counts (batch size and match count), not the number list. This API does **not** accept hashed numbers; use plaintext E.164 over TLS with auth + rate limits.\n\n**Future:** A `discoverableByPhone` (or similar) privacy flag can further restrict matches without changing the URL."
           },
@@ -356,8 +494,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -366,15 +510,26 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/users/match-contacts",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "users", "match-contacts"]
+                  "path": [
+                    "api",
+                    "users",
+                    "match-contacts"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "body": "{\n  \"matches\": [\n    {\n      \"phoneNumber\": \"+94771234567\",\n      \"userId\": \"550e8400-e29b-41d4-a716-446655440002\",\n      \"displayName\": \"kavi_perera\",\n      \"username\": \"kavi_perera\",\n      \"profilePhoto\": \"https://res.cloudinary.com/demo/image/upload/v1/unichat/profiles/user_kavi.jpg\"\n    }\n  ]\n}"
             },
             {
@@ -382,8 +537,14 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -392,47 +553,37 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/users/match-contacts",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "users", "match-contacts"]
+                  "path": [
+                    "api",
+                    "users",
+                    "match-contacts"
+                  ]
                 }
               },
               "status": "Bad Request",
               "code": 400,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "body": "{\n  \"statusCode\": 400,\n  \"message\": [\n    \"Each phone number must be E.164 (leading +, country code, 8–15 digits total after +)\"\n  ],\n  \"error\": \"Bad Request\"\n}"
             },
             {
               "name": "401 - no token",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"phoneNumbers\": [\"+94771234567\"]\n}"
-                },
-                "url": {
-                  "raw": "{{gateway_base}}/api/users/match-contacts",
-                  "protocol": "http",
-                  "host": ["localhost"],
-                  "port": "4225",
-                  "path": ["api", "users", "match-contacts"]
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing or invalid Authorization header (expected Bearer token)\",\n  \"error\": \"Unauthorized\"\n}"
-            },
-            {
-              "name": "429 - rate limited",
-              "originalRequest": {
-                "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{access_token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -441,15 +592,69 @@
                 "url": {
                   "raw": "{{gateway_base}}/api/users/match-contacts",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4225",
-                  "path": ["api", "users", "match-contacts"]
+                  "path": [
+                    "api",
+                    "users",
+                    "match-contacts"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing or invalid Authorization header (expected Bearer token)\",\n  \"error\": \"Unauthorized\"\n}"
+            },
+            {
+              "name": "429 - rate limited",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phoneNumbers\": [\"+94771234567\"]\n}"
+                },
+                "url": {
+                  "raw": "{{gateway_base}}/api/users/match-contacts",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "4225",
+                  "path": [
+                    "api",
+                    "users",
+                    "match-contacts"
+                  ]
                 }
               },
               "status": "Too Many Requests",
               "code": 429,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "body": "{\n  \"statusCode\": 429,\n  \"message\": \"Too many contact match requests; try again later\"\n}"
             }
           ]
@@ -471,9 +676,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/user/{{user_id}}",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "user", "{{user_id}}"]
+              "path": [
+                "api",
+                "user",
+                "{{user_id}}"
+              ]
             },
             "description": "Forwarded to user-service. Optional fields: displayName, username, email, profilePhoto (base64 or data-URI, max ~10 MB through gateway)."
           }
@@ -486,9 +697,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/user/{{user_id}}/deactivate",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "user", "{{user_id}}", "deactivate"]
+              "path": [
+                "api",
+                "user",
+                "{{user_id}}",
+                "deactivate"
+              ]
             },
             "description": "Forwarded to user-service `PUT .../user/:id/deactivate`."
           }
@@ -516,9 +734,16 @@
             "url": {
               "raw": "http://localhost:4226/api/auth/otp/generate",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4226",
-              "path": ["api", "auth", "otp", "generate"]
+              "path": [
+                "api",
+                "auth",
+                "otp",
+                "generate"
+              ]
             }
           }
         },
@@ -539,9 +764,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/otp/verify",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "otp", "verify"]
+              "path": [
+                "api",
+                "auth",
+                "otp",
+                "verify"
+              ]
             },
             "description": "Same URL clients use. Gateway forwards to auth-service. For service-only testing without the gateway, call auth-service :4226 directly."
           }
@@ -560,9 +792,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/user/find-by-phone?phoneNumber=+1234567890",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "user", "find-by-phone"],
+              "path": [
+                "api",
+                "user",
+                "find-by-phone"
+              ],
               "query": [
                 {
                   "key": "phoneNumber",
@@ -589,9 +827,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/user/create",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "user", "create"]
+              "path": [
+                "api",
+                "user",
+                "create"
+              ]
             }
           }
         },
@@ -616,9 +860,16 @@
             "url": {
               "raw": "http://localhost:4227/api/user/contacts/match",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4227",
-              "path": ["api", "user", "contacts", "match"]
+              "path": [
+                "api",
+                "user",
+                "contacts",
+                "match"
+              ]
             },
             "description": "user-service endpoint used by the gateway after JWT verification. **Do not expose publicly** without the same trust model. Prefer `POST {{gateway_base}}/api/users/match-contacts` with Bearer token from clients."
           }
@@ -640,9 +891,16 @@
             "url": {
               "raw": "http://localhost:4227/api/user/profile/complete",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4227",
-              "path": ["api", "user", "profile", "complete"]
+              "path": [
+                "api",
+                "user",
+                "profile",
+                "complete"
+              ]
             },
             "description": "Internal endpoint called by api-gateway. Do not call directly from clients.\n\nSets username, email, and optional profile photo (base64) for a user. Uploads photo to Cloudinary.\n\nReturns 409 if username or email is already taken by another user."
           },
@@ -652,7 +910,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -661,16 +922,26 @@
                 "url": {
                   "raw": "http://localhost:4227/api/user/profile/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4227",
-                  "path": ["api", "user", "profile", "complete"]
+                  "path": [
+                    "api",
+                    "user",
+                    "profile",
+                    "complete"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"success\": true,\n  \"isNewUser\": false,\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"phoneNumber\": \"+1234567890\",\n    \"displayName\": \"john_doe\",\n    \"username\": \"john_doe\",\n    \"email\": \"john@example.com\",\n    \"avatarUrl\": null,\n    \"profileCompleted\": true,\n    \"status\": \"ACTIVE\"\n  }\n}"
             },
@@ -679,7 +950,10 @@
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -688,16 +962,26 @@
                 "url": {
                   "raw": "http://localhost:4227/api/user/profile/complete",
                   "protocol": "http",
-                  "host": ["localhost"],
+                  "host": [
+                    "localhost"
+                  ],
                   "port": "4227",
-                  "path": ["api", "user", "profile", "complete"]
+                  "path": [
+                    "api",
+                    "user",
+                    "profile",
+                    "complete"
+                  ]
                 }
               },
               "status": "Conflict",
               "code": 409,
               "_postman_previewlanguage": "json",
               "header": [
-                { "key": "Content-Type", "value": "application/json" }
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
               ],
               "body": "{\n  \"statusCode\": 409,\n  \"message\": \"Email is already in use\",\n  \"error\": \"Conflict\"\n}"
             }
@@ -726,9 +1010,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/otp/request",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "otp", "request"]
+              "path": [
+                "api",
+                "auth",
+                "otp",
+                "request"
+              ]
             },
             "description": "Client URL: `POST /api/auth/otp/request` on the API Gateway."
           }
@@ -750,9 +1041,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/auth/otp/verify",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "auth", "otp", "verify"]
+              "path": [
+                "api",
+                "auth",
+                "otp",
+                "verify"
+              ]
             },
             "description": "Client URL: `POST /api/auth/otp/verify` on the API Gateway."
           }
@@ -774,9 +1072,15 @@
             "url": {
               "raw": "http://localhost:4228/api/otp/request",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4228",
-              "path": ["api", "otp", "request"]
+              "path": [
+                "api",
+                "otp",
+                "request"
+              ]
             },
             "description": "Bypasses the gateway; hits otp-service only. Use when isolating otp-service behaviour."
           }
@@ -800,9 +1104,14 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations"]
+              "path": [
+                "api",
+                "conversations"
+              ]
             }
           }
         },
@@ -819,9 +1128,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100"
+              ]
             }
           }
         },
@@ -846,9 +1161,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/private",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "private"]
+              "path": [
+                "api",
+                "conversations",
+                "private"
+              ]
             }
           }
         },
@@ -868,15 +1189,22 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Project Discussion\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"participantUserIds\": [\"550e8400-e29b-41d4-a716-446655440002\", \"550e8400-e29b-41d4-a716-446655440003\"]\n}"
+              "raw": "{\n  \"title\": \"Project Discussion\",\n  \"imageUrl\": \"data:image/png;base64,iVBORw0KGgoAAAANSU...\",\n  \"participantUserIds\": [\"550e8400-e29b-41d4-a716-446655440002\", \"550e8400-e29b-41d4-a716-446655440003\"]\n}"
             },
             "url": {
               "raw": "{{gateway_base}}/api/conversations/group",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "group"]
-            }
+              "path": [
+                "api",
+                "conversations",
+                "group"
+              ]
+            },
+            "description": "Create a new group conversation. For the `imageUrl` property, you can provide either a public HTTP URL or a base64-encoded image string (`data:image/png;base64,...`) to directly upload the group DP via Cloudinary."
           }
         },
         {
@@ -900,9 +1228,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "participants"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "participants"
+              ]
             }
           }
         },
@@ -919,9 +1254,17 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/participants/550e8400-e29b-41d4-a716-446655440002",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "participants", "550e8400-e29b-41d4-a716-446655440002"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "participants",
+                "550e8400-e29b-41d4-a716-446655440002"
+              ]
             }
           }
         },
@@ -938,9 +1281,18 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/promote",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "admins", "550e8400-e29b-41d4-a716-446655440002", "promote"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "admins",
+                "550e8400-e29b-41d4-a716-446655440002",
+                "promote"
+              ]
             }
           }
         },
@@ -957,9 +1309,18 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/admins/550e8400-e29b-41d4-a716-446655440002/demote",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "admins", "550e8400-e29b-41d4-a716-446655440002", "demote"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "admins",
+                "550e8400-e29b-41d4-a716-446655440002",
+                "demote"
+              ]
             }
           }
         },
@@ -976,9 +1337,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/leave",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "leave"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "leave"
+              ]
             }
           }
         },
@@ -998,15 +1366,23 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"New Title\",\n  \"description\": \"New description\",\n  \"imageUrl\": \"https://example.com/new-image.jpg\",\n  \"joinApprovalMode\": \"ADMIN_APPROVAL\",\n  \"memberAddMode\": \"ADMINS_ONLY\",\n  \"onlyAdminsCanPost\": true,\n  \"onlyAdminsCanEditInfo\": true,\n  \"maxMembers\": 100\n}"
+              "raw": "{\n  \"title\": \"New Title\",\n  \"description\": \"New description\",\n  \"imageUrl\": \"data:image/png;base64,iVBORw0KGgoAAAANSU...\",\n  \"joinApprovalMode\": \"ADMIN_APPROVAL\",\n  \"memberAddMode\": \"ADMINS_ONLY\",\n  \"onlyAdminsCanPost\": true,\n  \"onlyAdminsCanEditInfo\": true,\n  \"maxMembers\": 100\n}"
             },
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/settings",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "settings"]
-            }
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "settings"
+              ]
+            },
+            "description": "Update settings for a group conversation. The `imageUrl` property handles updating the group DP and supports either an HTTP URL or a base64-encoded image string (`data:image/png;base64,...`) for direct upload via Cloudinary."
           }
         },
         {
@@ -1030,9 +1406,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/mute",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "mute"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "mute"
+              ]
             }
           }
         },
@@ -1057,9 +1440,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/conversations/550e8400-e29b-41d4-a716-446655440100/archive",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "conversations", "550e8400-e29b-41d4-a716-446655440100", "archive"]
+              "path": [
+                "api",
+                "conversations",
+                "550e8400-e29b-41d4-a716-446655440100",
+                "archive"
+              ]
             }
           }
         }
@@ -1090,9 +1480,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/text",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "text"]
+              "path": [
+                "api",
+                "messages",
+                "text"
+              ]
             }
           }
         },
@@ -1117,9 +1513,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/media",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "media"]
+              "path": [
+                "api",
+                "messages",
+                "media"
+              ]
             }
           }
         },
@@ -1136,9 +1538,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/conversation/550e8400-e29b-41d4-a716-446655440100?limit=50&cursor=",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "conversation", "550e8400-e29b-41d4-a716-446655440100"],
+              "path": [
+                "api",
+                "messages",
+                "conversation",
+                "550e8400-e29b-41d4-a716-446655440100"
+              ],
               "query": [
                 {
                   "key": "limit",
@@ -1165,9 +1574,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/unread-counts/550e8400-e29b-41d4-a716-446655440100",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "unread-counts", "550e8400-e29b-41d4-a716-446655440100"]
+              "path": [
+                "api",
+                "messages",
+                "unread-counts",
+                "550e8400-e29b-41d4-a716-446655440100"
+              ]
             }
           }
         },
@@ -1184,9 +1600,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
+              "path": [
+                "api",
+                "messages",
+                "550e8400-e29b-41d4-a716-446655440300"
+              ]
             }
           }
         },
@@ -1211,9 +1633,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/forward",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "forward"]
+              "path": [
+                "api",
+                "messages",
+                "550e8400-e29b-41d4-a716-446655440300",
+                "forward"
+              ]
             }
           }
         },
@@ -1230,9 +1659,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/delivered",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "delivered"]
+              "path": [
+                "api",
+                "messages",
+                "550e8400-e29b-41d4-a716-446655440300",
+                "delivered"
+              ]
             }
           }
         },
@@ -1249,9 +1685,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/read",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "read"]
+              "path": [
+                "api",
+                "messages",
+                "550e8400-e29b-41d4-a716-446655440300",
+                "read"
+              ]
             }
           }
         },
@@ -1276,9 +1719,16 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300/edit",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300", "edit"]
+              "path": [
+                "api",
+                "messages",
+                "550e8400-e29b-41d4-a716-446655440300",
+                "edit"
+              ]
             }
           }
         },
@@ -1295,9 +1745,15 @@
             "url": {
               "raw": "{{gateway_base}}/api/messages/550e8400-e29b-41d4-a716-446655440300",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "4225",
-              "path": ["api", "messages", "550e8400-e29b-41d4-a716-446655440300"]
+              "path": [
+                "api",
+                "messages",
+                "550e8400-e29b-41d4-a716-446655440300"
+              ]
             }
           }
         }
