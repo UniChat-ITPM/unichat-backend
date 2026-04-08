@@ -15,7 +15,11 @@ const HEADERS_TO_FORWARD = [
   'accept-language',
 ] as const;
 
-export type ProxiedBackend = 'conversation' | 'messaging' | 'realtime';
+export type ProxiedBackend =
+  | 'conversation'
+  | 'messaging'
+  | 'realtime'
+  | 'call';
 
 @Injectable()
 export class BackendProxyService {
@@ -29,6 +33,7 @@ export class BackendProxyService {
       process.env['MESSAGING_SERVICE_URL'] ?? 'http://127.0.0.1:4230',
     realtime:
       process.env['REALTIME_SERVICE_URL'] ?? 'http://127.0.0.1:8228',
+    call: process.env['CALL_SERVICE_URL'] ?? 'http://127.0.0.1:8229',
   };
 
   /**
@@ -161,6 +166,8 @@ export class BackendProxyService {
         'hint: start messaging-service (npm run up:messaging-service, default port 4230) or set MESSAGING_SERVICE_URL',
       realtime:
         'hint: start realtime-service (npm run up:realtime-service, default port 8228) or set REALTIME_SERVICE_URL',
+      call:
+        'hint: start call-service (npm run up:call-service, default port 8229) or set CALL_SERVICE_URL',
     };
     return hints[backend];
   }

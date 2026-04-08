@@ -82,6 +82,7 @@ npm run up:media-service
 npm run up:moderation-service
 npm run up:conversion-service
 npm run up:realtime-service
+npm run up:call-service
 ```
 
 ### Start all services at once
@@ -110,6 +111,9 @@ Recommended startup order for OTP flow:
 - moderation-service: 8226
 - conversion-service: 8227
 - realtime-service: 8228
+- call-service: 8229 (WebRTC signaling; Socket.IO path `/call/socket.io`; proxied from api-gateway at `http://localhost:4225/call/socket.io`)
+
+Gateway env: `CALL_SERVICE_URL` (default `http://127.0.0.1:8229`, may include `/api` for HTTP proxy — WebSocket target is normalized). Optional: `ICE_SERVERS_JSON` — JSON array of WebRTC `iceServers` (default: public STUN).
 
 ## OTP Endpoints (Postman)
 

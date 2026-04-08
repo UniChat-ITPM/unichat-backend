@@ -12,6 +12,21 @@ import { AppModule } from './app/app.module';
 
 loadWorkspaceEnv();
 
+/** WebSocket proxy targets must be an origin only (no `/api`); prefer 127.0.0.1 over localhost on Windows. */
+function socketProxyTarget(raw: string | undefined, fallback: string): string {
+  let o = (raw ?? fallback).replace(/\/$/, '');
+  if (o.endsWith('/api')) {
+    o = o.slice(0, -'/api'.length);
+  }
+  if (/^http:\/\/localhost(?=:|\/|$)/i.test(o)) {
+    o = o.replace(/^http:\/\/localhost/i, 'http://127.0.0.1');
+  }
+  if (/^https:\/\/localhost(?=:|\/|$)/i.test(o)) {
+    o = o.replace(/^https:\/\/localhost/i, 'https://127.0.0.1');
+  }
+  return o;
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -21,14 +36,27 @@ async function bootstrap() {
   });
 
   const expressApp = app.getHttpAdapter().getInstance() as express.Express;
-  const realtimeTarget =
-    process.env['REALTIME_SERVICE_URL'] ?? 'http://localhost:8228';
+  const realtimeTarget = socketProxyTarget(
+    process.env['REALTIME_SERVICE_URL'],
+    'http://localhost:8228',
+  );
   const socketIoProxy = createProxyMiddleware({
     target: realtimeTarget,
     changeOrigin: true,
     ws: true,
   });
   expressApp.use('/socket.io', socketIoProxy);
+
+  const callServiceTarget = socketProxyTarget(
+    process.env['CALL_SERVICE_URL'],
+    'http://localhost:8229',
+  );
+  const callSocketProxy = createProxyMiddleware({
+    target: callServiceTarget,
+    changeOrigin: true,
+    ws: true,
+  });
+  expressApp.use('/call/socket.io', callSocketProxy);
 
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
@@ -40,7 +68,17 @@ async function bootstrap() {
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
   const port = Number(process.env['API_GATEWAY_PORT']) || 4225;
   await app.listen(port);
-  app.getHttpServer().on('upgrade', socketIoProxy.upgrade);
+  const httpServer = app.getHttpServer();
+  httpServer.on('upgrade', (req, socket, head) => {
+    const path = req.url?.split('?')[0] ?? '';
+    if (path.startsWith('/call/socket.io')) {
+      callSocketProxy.upgrade?.(req, socket, head);
+    } else if (path.startsWith('/socket.io')) {
+      socketIoProxy.upgrade?.(req, socket, head);
+    } else {
+      socket.destroy();
+    }
+  });
   Logger.log(
     `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
   );
