@@ -1,0 +1,24 @@
+﻿notification-service/src/dto/create-notification.dto.ts(2,10): error TS2305: Module '"@prisma/client"' has no exported member 'NotificationType'.
+notification-service/src/dto/create-notification.dto.ts(2,28): error TS2305: Module '"@prisma/client"' has no exported member 'NotificationPriority'.
+notification-service/src/dto/create-notification.dto.ts(7,3): error TS2564: Property 'userId' has no initializer and is not definitely assigned in the constructor.
+notification-service/src/dto/create-notification.dto.ts(14,3): error TS2564: Property 'title' has no initializer and is not definitely assigned in the constructor.
+notification-service/src/dto/create-notification.dto.ts(18,3): error TS2564: Property 'body' has no initializer and is not definitely assigned in the constructor.
+notification-service/src/dto/notification-query.dto.ts(3,10): error TS2305: Module '"@prisma/client"' has no exported member 'NotificationType'.
+notification-service/src/dto/register-device.dto.ts(2,10): error TS2305: Module '"@prisma/client"' has no exported member 'PushPlatform'.
+notification-service/src/dto/register-device.dto.ts(7,3): error TS2564: Property 'deviceToken' has no initializer and is not definitely assigned in the constructor.
+notification-service/src/notification.service.ts(4,10): error TS2305: Module '"@prisma/client"' has no exported member 'PushPlatform'.
+notification-service/src/repositories/notification.repository.ts(5,3): error TS2305: Module '"@prisma/client"' has no exported member 'NotificationType'.
+notification-service/src/repositories/notification.repository.ts(6,3): error TS2305: Module '"@prisma/client"' has no exported member 'NotificationPriority'.
+notification-service/src/repositories/notification.repository.ts(7,3): error TS2305: Module '"@prisma/client"' has no exported member 'PushPlatform'.
+notification-service/src/repositories/notification.repository.ts(35,24): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(68,45): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(83,24): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(89,24): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(95,24): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(102,24): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(109,24): error TS2339: Property 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(117,24): error TS2339: Property 'notificationPreference' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(131,24): error TS2339: Property 'notificationPreference' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(144,24): error TS2339: Property 'notificationDevice' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(162,24): error TS2339: Property 'notificationDevice' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+notification-service/src/repositories/notification.repository.ts(168,24): error TS2339: Property 'notificationDevice' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.

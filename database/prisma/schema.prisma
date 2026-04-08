@@ -193,6 +193,26 @@ enum AuditAction {
   USER_UNBLOCKED
 }
 
+enum NotificationType {
+  MESSAGE
+  GROUP
+  OTP
+  SECURITY
+  SYSTEM
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+enum PushPlatform {
+  ANDROID
+  IOS
+  WEB
+}
+
 //
 // AUTH / USER DOMAIN
 //
@@ -241,6 +261,9 @@ model User {
   abuseEvents      AbuseEvent[]
   auditLogs        AuditLog[]
   groupInvites     GroupInvite[]
+  notifications          Notification[]
+  notificationPreference NotificationPreference?
+  notificationDevices    NotificationDevice[]
 
   @@index([displayName])
   @@index([status])
@@ -669,4 +692,57 @@ model AuditLog {
   @@index([action])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+//
+// NOTIFICATION DOMAIN
+//
+
+model Notification {
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @db.Uuid
+  type      NotificationType
+  title     String               @db.VarChar(150)
+  body      String               @db.VarChar(255)
+  data      Json?
+  priority  NotificationPriority @default(NORMAL)
+  isRead    Boolean              @default(false)
+  readAt    DateTime?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([type])
+}
+
+model NotificationPreference {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @db.Uuid
+  messageNotifications  Boolean  @default(true)
+  groupNotifications    Boolean  @default(true)
+  otpNotifications      Boolean  @default(true)
+  securityNotifications Boolean  @default(true)
+  pushNotifications     Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationDevice {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @db.Uuid
+  deviceToken String       @unique @db.Text
+  platform    PushPlatform
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceToken])
 }

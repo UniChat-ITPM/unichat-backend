@@ -13,6 +13,7 @@
     "up:moderation-service": "npx nx serve moderation-service",
     "up:conversion-service": "npx nx serve conversion-service",
     "up:realtime-service": "npx nx serve realtime-service",
+    "up:notification-service": "npx nx serve notification-service",
     "up:all": "concurrently \"npm run up:api-gateway\" \"npm run up:auth-service\" \"npm run up:user-service\" \"npm run up:otp-service\" \"npm run up:conversation-service\" \"npm run up:messaging-service\" \"npm run up:media-service\" \"npm run up:moderation-service\" \"npm run up:conversion-service\" \"npm run up:realtime-service\"",
     "up:chat-core": "concurrently \"npm run up:api-gateway\" \"npm run up:conversation-service\" \"npm run up:messaging-service\" \"npm run up:realtime-service\""
   },
@@ -43,7 +44,7 @@
     "jest": "^30.3.0",
     "nx": "22.6.1",
     "prettier": "~3.6.2",
-    "prisma": "^7.5.0",
+    "prisma": "^7.7.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "tslib": "^2.3.0",
