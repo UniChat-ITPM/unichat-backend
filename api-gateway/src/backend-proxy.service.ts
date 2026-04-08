@@ -18,6 +18,7 @@ const HEADERS_TO_FORWARD = [
 export type ProxiedBackend =
   | 'conversation'
   | 'messaging'
+  | 'moderation'
   | 'realtime'
   | 'call';
 
@@ -31,6 +32,8 @@ export class BackendProxyService {
       process.env['CONVERSATION_SERVICE_URL'] ?? 'http://127.0.0.1:4229',
     messaging:
       process.env['MESSAGING_SERVICE_URL'] ?? 'http://127.0.0.1:4230',
+    moderation:
+      process.env['MODERATION_SERVICE_URL'] ?? 'http://127.0.0.1:8226',
     realtime:
       process.env['REALTIME_SERVICE_URL'] ?? 'http://127.0.0.1:8228',
     call: process.env['CALL_SERVICE_URL'] ?? 'http://127.0.0.1:8229',
@@ -164,6 +167,8 @@ export class BackendProxyService {
         'hint: start conversation-service (npm run up:conversation-service, default port 4229) or set CONVERSATION_SERVICE_URL',
       messaging:
         'hint: start messaging-service (npm run up:messaging-service, default port 4230) or set MESSAGING_SERVICE_URL',
+      moderation:
+        'hint: start moderation-service (npm run up:moderation-service, default port 8226) or set MODERATION_SERVICE_URL',
       realtime:
         'hint: start realtime-service (npm run up:realtime-service, default port 8228) or set REALTIME_SERVICE_URL',
       call:
