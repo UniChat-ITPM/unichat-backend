@@ -47,3 +47,6 @@ Thumbs.db
 .wwebjs_cache
 
 /generated/prisma
+
+# Model files
+model.safetensors

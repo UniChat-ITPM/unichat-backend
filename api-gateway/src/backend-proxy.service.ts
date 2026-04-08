@@ -42,6 +42,10 @@ export class BackendProxyService {
     if (o.endsWith('/api')) {
       o = o.slice(0, -'/api'.length);
     }
+    // `localhost` can resolve to ::1 while a service listens on IPv4 only → ECONNREFUSED on Windows.
+    if (/^https?:\/\/localhost(?=:|\/|$)/i.test(o)) {
+      o = o.replace(/^http:\/\/localhost/i, 'http://127.0.0.1').replace(/^https:\/\/localhost/i, 'https://127.0.0.1');
+    }
     return o;
   }
 
@@ -110,7 +114,7 @@ export class BackendProxyService {
         data: response.data,
       };
     } catch (error) {
-      const detail = this.formatProxyTransportError(error, targetUrl);
+      const detail = this.formatProxyTransportError(error, targetUrl, backend);
       this.logger.error(`${backend} proxy failed for ${method} ${req.originalUrl}: ${detail}`);
       throw new ServiceUnavailableException(
         `Unable to reach ${backend} service`,
@@ -118,7 +122,11 @@ export class BackendProxyService {
     }
   }
 
-  private formatProxyTransportError(error: unknown, targetUrl: string): string {
+  private formatProxyTransportError(
+    error: unknown,
+    targetUrl: string,
+    backend: ProxiedBackend,
+  ): string {
     if (error instanceof AxiosError) {
       const bits: string[] = [];
       const m = error.message?.trim();
@@ -133,11 +141,27 @@ export class BackendProxyService {
         bits.push(`cause=${error.cause.message}`);
       }
       bits.push(`→ ${targetUrl}`);
+      if (error.code === 'ECONNREFUSED') {
+        bits.push(this.econnrefusedHint(backend));
+      }
       return bits.join(' ');
     }
     if (error instanceof Error) {
       return error.message?.trim() || error.name || String(error);
     }
     return String(error);
+  }
+
+  /** Explains ECONNREFUSED: gateway is up but the downstream microservice is not listening. */
+  private econnrefusedHint(backend: ProxiedBackend): string {
+    const hints: Record<ProxiedBackend, string> = {
+      conversation:
+        'hint: start conversation-service (npm run up:conversation-service, default port 4229) or set CONVERSATION_SERVICE_URL',
+      messaging:
+        'hint: start messaging-service (npm run up:messaging-service, default port 4230) or set MESSAGING_SERVICE_URL',
+      realtime:
+        'hint: start realtime-service (npm run up:realtime-service, default port 8228) or set REALTIME_SERVICE_URL',
+    };
+    return hints[backend];
   }
 }
