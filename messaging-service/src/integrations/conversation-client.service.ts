@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient, ParticipantStatus, ConversationStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  ParticipantStatus,
+  ConversationStatus,
+  ConversationType,
+} from '@prisma/client';
 
 const MEMBERSHIP_CACHE_MS = 90_000;
 const MEMBERSHIP_CACHE_MAX = 2_000;
@@ -74,6 +79,55 @@ export class ConversationClientService {
       ok,
     });
     return ok;
+  }
+
+  /**
+   * For DIRECT (1:1) threads: if either participant has blocked the other — in either direction —
+   * neither user may send new messages until the block is removed.
+   */
+  async assertDirectConversationNotBlocked(
+    senderUserId: string,
+    conversationId: string,
+  ): Promise<void> {
+    const conv = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: {
+        type: true,
+        participants: {
+          where: { status: ParticipantStatus.ACTIVE },
+          select: { userId: true },
+        },
+      },
+    });
+
+    if (!conv || conv.type !== ConversationType.DIRECT) {
+      return;
+    }
+
+    const userIds = conv.participants.map((p) => p.userId);
+    if (userIds.length !== 2) {
+      return;
+    }
+
+    const peerUserId = userIds.find((id) => id !== senderUserId);
+    if (!peerUserId) {
+      return;
+    }
+
+    const block = await this.prisma.userBlock.findFirst({
+      where: {
+        OR: [
+          { blockerUserId: senderUserId, blockedUserId: peerUserId },
+          { blockerUserId: peerUserId, blockedUserId: senderUserId },
+        ],
+      },
+    });
+
+    if (block) {
+      throw new ForbiddenException(
+        'Messaging is not available between you and this user while one of you is blocked.',
+      );
+    }
   }
 
   /** Bump row so home "Chats" list sorts this thread to the top after new activity. */

@@ -45,6 +45,7 @@ export class MessagingService {
 
   async sendTextMessage(userId: string, dto: SendTextMessageDto) {
     await this.verifyMembershipOrThrow(dto.conversationId, userId);
+    await this.conversationClient.assertDirectConversationNotBlocked(userId, dto.conversationId);
 
     const full = await this.messageRepository.createMessage({
       conversationId: dto.conversationId,
@@ -63,6 +64,7 @@ export class MessagingService {
 
   async sendMediaMessage(userId: string, dto: SendMediaMessageDto) {
     await this.verifyMembershipOrThrow(dto.conversationId, userId);
+    await this.conversationClient.assertDirectConversationNotBlocked(userId, dto.conversationId);
 
     if (!dto.mediaAssetIds || dto.mediaAssetIds.length === 0) {
       throw new BadRequestException('At least one mediaAssetId must be provided');
@@ -104,6 +106,7 @@ export class MessagingService {
 
   async forwardMessage(userId: string, messageId: string, targetConversationId: string) {
     await this.verifyMembershipOrThrow(targetConversationId, userId);
+    await this.conversationClient.assertDirectConversationNotBlocked(userId, targetConversationId);
 
     const original = await this.messageRepository.findMessageById(messageId);
     if (!original || original.isDeleted) {
