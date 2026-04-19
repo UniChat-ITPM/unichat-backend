@@ -9,6 +9,8 @@ import { PrismaClient, MediaType, UploadStatus } from '@prisma/client';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 
 const MAX_BYTES = 25 * 1024 * 1024;
+/** Documents (non-image/video/audio) are limited to 20 MB for chat uploads. */
+const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
 
 @Injectable()
 export class ChatMediaService {
@@ -65,12 +67,18 @@ export class ChatMediaService {
     if (!file?.buffer?.length) {
       throw new BadRequestException('File is empty');
     }
-    if (file.size > MAX_BYTES) {
-      throw new BadRequestException('File too large (max 25 MB)');
-    }
 
     const mime = file.mimetype || 'application/octet-stream';
     const mediaType = this.inferMediaType(mime);
+    const maxAllowed =
+      mediaType === MediaType.DOCUMENT ? MAX_DOCUMENT_BYTES : MAX_BYTES;
+    if (file.size > maxAllowed) {
+      throw new BadRequestException(
+        mediaType === MediaType.DOCUMENT
+          ? 'File too large (max 20 MB for documents)'
+          : 'File too large (max 25 MB)',
+      );
+    }
     const folder =
       process.env['CLOUDINARY_CHAT_FOLDER'] ?? 'unichat/chat';
     const resourceType = this.resourceTypeForUpload(mediaType);

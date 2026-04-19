@@ -9,7 +9,9 @@ export type CreateGroupConversationBody = {
 };
 
 export type AddParticipantsBody = {
-  userIds: string[];
+  /** @deprecated prefer participantUserIds (matches create-group body) */
+  userIds?: string[];
+  participantUserIds?: string[];
 };
 
 export type UpdateGroupSettingsBody = {
