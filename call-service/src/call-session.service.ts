@@ -30,8 +30,8 @@ export class CallSessionService {
     return `unichat:call:${callId}`;
   }
 
-  isUuid(value: string | undefined): boolean {
-    return Boolean(value && UUID_RE.test(value));
+  isUuid(value: unknown): value is string {
+    return typeof value === 'string' && UUID_RE.test(value);
   }
 
   async createRingingSession(
