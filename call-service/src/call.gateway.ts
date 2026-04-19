@@ -164,11 +164,11 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!this.sessions.isUuid(callId)) {
       return { ok: false, error: 'INVALID_CALL' };
     }
-    const before = await this.sessions.getSession(callId!);
+    const before = await this.sessions.getSession(callId);
     if (!before || before.state !== 'ringing' || before.calleeId !== userId) {
       return { ok: false, error: 'NOT_ALLOWED' };
     }
-    const session = await this.sessions.setActive(callId!);
+    const session = await this.sessions.setActive(callId);
     if (!session) {
       return { ok: false, error: 'NOT_ALLOWED' };
     }
@@ -210,7 +210,7 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!this.sessions.isUuid(callId)) {
       return { ok: false, error: 'INVALID_CALL' };
     }
-    const session = await this.sessions.getSession(callId!);
+    const session = await this.sessions.getSession(callId);
     if (!session || session.state !== 'ringing') {
       return { ok: false, error: 'NOT_FOUND' };
     }
@@ -223,7 +223,7 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return { ok: false, error: 'NOT_ALLOWED' };
       }
     }
-    await this.sessions.deleteSession(callId!);
+    await this.sessions.deleteSession(callId);
     const peer = this.sessions.otherUserId(session, userId);
     if (peer) {
       await this.emitToUser(event, peer, { callId, byUserId: userId });
@@ -244,15 +244,15 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!this.sessions.isUuid(callId)) {
       return { ok: false, error: 'INVALID_CALL' };
     }
-    const session = await this.sessions.getSession(callId!);
+    const session = await this.sessions.getSession(callId);
     if (!session) {
       return { ok: false, error: 'NOT_FOUND' };
     }
-    if (this.sessions.otherUserId(session, userId) == null) {
+    const peer = this.sessions.otherUserId(session, userId);
+    if (peer == null) {
       return { ok: false, error: 'NOT_ALLOWED' };
     }
-    await this.sessions.deleteSession(callId!);
-    const peer = this.sessions.otherUserId(session, userId)!;
+    await this.sessions.deleteSession(callId);
     await this.emitToUser('call:ended', peer, { callId, byUserId: userId });
     return { ok: true, callId };
   }
@@ -270,7 +270,7 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!this.sessions.isUuid(callId)) {
       return { ok: false, error: 'INVALID_CALL' };
     }
-    const session = await this.sessions.getSession(callId!);
+    const session = await this.sessions.getSession(callId);
     if (!session || session.state !== 'active') {
       return { ok: false, error: 'NOT_ACTIVE' };
     }
