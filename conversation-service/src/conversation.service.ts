@@ -270,8 +270,8 @@ export class ConversationService {
     this.assertGroupConversation(conversation);
     await this.assertAdminOrOwner(conversationId, userId);
 
-    const { userIds } = body;
-    if (!userIds || userIds.length === 0) {
+    const userIds = [...(body.participantUserIds ?? body.userIds ?? [])];
+    if (userIds.length === 0) {
       throw new BadRequestException('At least one user ID is required');
     }
 
